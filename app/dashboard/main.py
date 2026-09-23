@@ -33,6 +33,7 @@ from app.servicos.dados import (
     salvar_carga,
     salvar_custo,
     salvar_pagamento_trabalhador,
+    limpar_dados_teste,
 )
 
 # -----------------------------------------------------------------------------
@@ -210,6 +211,26 @@ with st.sidebar:
     )
 
     st.caption("🔒 Conectado com segurança ao Supabase")
+
+    st.markdown("<br>", unsafe_allow_html=True)
+    with st.expander("🧹 Zerar Dados de Teste"):
+        st.caption("Apaga todas as cargas, trabalhadores e despesas de teste para entregar o sistema zerado.")
+        if st.button("🗑️ Limpar Banco de Teste Agora", type="secondary"):
+            try:
+                res = limpar_dados_teste()
+                st.success(f"✅ Banco zerado com sucesso! ({res['cargas']} cargas, {res['trabalhadores']} trabalhadores, {res['custos']} despesas removidos)")
+                st.rerun()
+            except Exception as e:
+                st.error(f"Erro ao limpar: {e}")
+
+# Processa limpeza via parâmetro de URL se acessado com ?limpar_teste=1
+if st.query_params.get("limpar_teste") == "1":
+    try:
+        res = limpar_dados_teste()
+        st.toast(f"🧹 Banco zerado com sucesso! ({res['cargas']} cargas, {res['trabalhadores']} trabalhadores removidos).", icon="✅")
+        st.query_params.clear()
+    except Exception as e:
+        st.error(f"Erro ao limpar via URL: {e}")
 
 
 # -----------------------------------------------------------------------------

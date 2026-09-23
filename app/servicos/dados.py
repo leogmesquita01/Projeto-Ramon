@@ -438,3 +438,34 @@ def listar_ultimos_pagamentos(
             ]
     finally:
         conn.close()
+
+
+def limpar_dados_teste() -> dict[str, int]:
+    """
+    Remove todos os registros de teste de cargas, pagamentos de trabalhadores,
+    custos, trabalhadores e precos avulsos, mantendo intactas as culturas e safras.
+    """
+    conn = obter_conexao()
+    try:
+        with conn.cursor() as cursor:
+            cursor.execute("DELETE FROM cargas;")
+            cargas_del = cursor.rowcount
+            cursor.execute("DELETE FROM pagamentos_trabalhadores;")
+            pagamentos_del = cursor.rowcount
+            cursor.execute("DELETE FROM custos;")
+            custos_del = cursor.rowcount
+            cursor.execute("DELETE FROM trabalhadores;")
+            trab_del = cursor.rowcount
+            cursor.execute("DELETE FROM precos;")
+            precos_del = cursor.rowcount
+            conn.commit()
+            return {
+                "cargas": cargas_del,
+                "pagamentos": pagamentos_del,
+                "custos": custos_del,
+                "trabalhadores": trab_del,
+                "precos": precos_del,
+            }
+    finally:
+        conn.close()
+
