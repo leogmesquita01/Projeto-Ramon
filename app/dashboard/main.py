@@ -61,9 +61,16 @@ st.markdown(
 
     /* Espaçamento superior para não colar na barra do Streamlit Cloud */
     .block-container {
-        padding-top: 4.5rem !important;
+        padding-top: 2rem !important;
         padding-bottom: 3rem !important;
     }
+
+    /* Ocultar menu hambúrguer, rodapé e barra de ferramentas padrão do Streamlit */
+    #MainMenu {visibility: hidden;}
+    footer {visibility: hidden;}
+    header {visibility: hidden;}
+    [data-testid="stToolbar"] {visibility: hidden;}
+    [data-testid="stDecoration"] {visibility: hidden;}
 
     /* Cartão base estilo container escuro sofisticado */
     .agro-card {
@@ -211,26 +218,6 @@ with st.sidebar:
     )
 
     st.caption("🔒 Conectado com segurança ao Supabase")
-
-    st.markdown("<br>", unsafe_allow_html=True)
-    with st.expander("🧹 Zerar Dados de Teste"):
-        st.caption("Apaga todas as cargas, trabalhadores e despesas de teste para entregar o sistema zerado.")
-        if st.button("🗑️ Limpar Banco de Teste Agora", type="secondary"):
-            try:
-                res = limpar_dados_teste()
-                st.success(f"✅ Banco zerado com sucesso! ({res['cargas']} cargas, {res['trabalhadores']} trabalhadores, {res['custos']} despesas removidos)")
-                st.rerun()
-            except Exception as e:
-                st.error(f"Erro ao limpar: {e}")
-
-# Processa limpeza via parâmetro de URL se acessado com ?limpar_teste=1
-if st.query_params.get("limpar_teste") == "1":
-    try:
-        res = limpar_dados_teste()
-        st.toast(f"🧹 Banco zerado com sucesso! ({res['cargas']} cargas, {res['trabalhadores']} trabalhadores removidos).", icon="✅")
-        st.query_params.clear()
-    except Exception as e:
-        st.error(f"Erro ao limpar via URL: {e}")
 
 
 # -----------------------------------------------------------------------------
@@ -528,7 +515,6 @@ if menu == "💰 'Meu Bolso' (Divisão do Dinheiro)":
                             "ID": f"#{p['id']}",
                             "Data": p["data"].strftime("%d/%m/%Y") if hasattr(p["data"], "strftime") else str(p["data"]),
                             "Trabalhador": p["trabalhador_nome"],
-                            "Atividade / Cultura": f"{p.get('icone', '🌾')} {p.get('cultura_nome', 'Geral')}",
                             "Valor Pago": f"R$ {p['valor']:,.2f}",
                         }
                         for p in pgtos_periodo
@@ -745,12 +731,7 @@ elif menu == "👷 Trabalhadores & Diárias":
                         st.success(f"Trabalhador '{novo_nome.strip()}' cadastrado com sucesso!")
                         st.rerun()
 
-            cultura_pgto_rotulo = st.selectbox(
-                "🌾 Cultura / Atividade da Diária:",
-                options=list(opcoes_safras.keys()),
-                help="Selecione para qual cultura ou atividade esse trabalhador atuou",
-            )
-            safra_pgto = opcoes_safras[cultura_pgto_rotulo] if opcoes_safras else None
+            safra_padrao_id = safras[0]["id"] if safras else None
 
             data_pgto = st.date_input("📅 Data do Pagamento / Acerto:", value=date.today())
 
@@ -773,7 +754,7 @@ elif menu == "👷 Trabalhadores & Diárias":
             )
 
             st.markdown("<br>", unsafe_allow_html=True)
-            btn_salvar_pgto = st.button("💾 Registrar Pagamento de Diária", type="primary", disabled=(trab_id is None or safra_pgto is None))
+            btn_salvar_pgto = st.button("💾 Registrar Pagamento de Diária", type="primary", disabled=(trab_id is None or safra_padrao_id is None))
 
     with col_resumo:
         total_pgto_calculado = qtd_diarias * valor_diaria
@@ -798,11 +779,11 @@ elif menu == "👷 Trabalhadores & Diárias":
             unsafe_allow_html=True,
         )
 
-    if btn_salvar_pgto and trab_id and safra_pgto:
+    if btn_salvar_pgto and trab_id and safra_padrao_id:
         try:
             pgto_id = salvar_pagamento_trabalhador(
                 trabalhador_id=trab_id,
-                safra_id=safra_pgto["id"],
+                safra_id=safra_padrao_id,
                 data_pagamento=data_pgto,
                 valor=total_pgto_calculado,
             )
@@ -823,7 +804,6 @@ elif menu == "👷 Trabalhadores & Diárias":
                     "ID #": f"#{p['id']}",
                     "Data": p["data"].strftime("%d/%m/%Y") if hasattr(p["data"], "strftime") else str(p["data"]),
                     "Trabalhador": p["trabalhador_nome"],
-                    "Cultura / Atividade": f"{p.get('icone', '🌾')} {p.get('cultura_nome', 'Geral')}",
                     "Valor Pago": f"R$ {p['valor']:,.2f}",
                 }
                 for p in pagamentos
