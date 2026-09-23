@@ -84,14 +84,26 @@ def salvar_carga(
         conn.close()
 
 
-def listar_ultimas_cargas(safra_id: int, limite: int = 10) -> list[dict[str, Any]]:
+def listar_ultimas_cargas(
+    safra_id: int,
+    limite: int = 50,
+    data_inicio: Optional[date] = None,
+    data_fim: Optional[date] = None,
+) -> list[dict[str, Any]]:
     """
-    Retorna as últimas cargas cadastradas para uma safra específica.
+    Retorna as cargas cadastradas para uma safra específica, com filtro opcional por período.
     """
     conn = obter_conexao()
     try:
         with conn.cursor() as cursor:
-            query = """
+            filtro_data = ""
+            params: list[Any] = [safra_id]
+            if data_inicio and data_fim:
+                filtro_data = " AND car.data >= %s AND car.data <= %s"
+                params.extend([data_inicio, data_fim])
+            params.append(limite)
+
+            query = f"""
                 SELECT 
                     car.id,
                     car.data,
@@ -100,11 +112,11 @@ def listar_ultimas_cargas(safra_id: int, limite: int = 10) -> list[dict[str, Any
                     COALESCE(car.valor_total, car.quantidade_sacas * COALESCE(p.valor_por_saca, 0)) AS valor_total
                 FROM cargas car
                 LEFT JOIN precos p ON car.preco_id = p.id
-                WHERE car.safra_id = %s
+                WHERE car.safra_id = %s {filtro_data}
                 ORDER BY car.data DESC, car.id DESC
                 LIMIT %s;
             """
-            cursor.execute(query, (safra_id, limite))
+            cursor.execute(query, tuple(params))
             linhas = cursor.fetchall()
 
             return [

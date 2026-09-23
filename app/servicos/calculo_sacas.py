@@ -1,35 +1,46 @@
-from typing import Any
+from datetime import date
+from typing import Any, Optional
 
 from app.database.conexao import obter_conexao
 
 
-def obter_resumo_sacas_safra(safra_id: int) -> dict[str, Any]:
+def obter_resumo_sacas_safra(
+    safra_id: int,
+    data_inicio: Optional[date] = None,
+    data_fim: Optional[date] = None,
+) -> dict[str, Any]:
     """
-    Calcula o total de sacas e métricas de transporte para uma safra específica.
+    Calcula o total de sacas e métricas de transporte para uma safra específica,
+    com filtro opcional por período de data.
     
     :param safra_id: ID da safra a ser consultada.
-    :return: Dicionário contendo:
-        - total_sacas: Soma total de sacas colhidas/transportadas.
-        - total_cargas: Quantidade de viagens/cargas registradas.
-        - media_sacas_por_carga: Média de sacas carregadas por viagem.
+    :param data_inicio: Data inicial do período (opcional).
+    :param data_fim: Data final do período (opcional).
+    :return: Dicionário contendo total_sacas, total_cargas e media_sacas_por_carga.
     """
     conn = obter_conexao()
     try:
         with conn.cursor() as cursor:
-            query = """
+            filtro_data = ""
+            params: list[Any] = [safra_id]
+            if data_inicio and data_fim:
+                filtro_data = " AND data >= %s AND data <= %s"
+                params.extend([data_inicio, data_fim])
+
+            query = f"""
                 SELECT 
                     COALESCE(SUM(quantidade_sacas), 0) AS total_sacas,
                     COUNT(id) AS total_cargas,
                     COALESCE(AVG(quantidade_sacas), 0) AS media_sacas_por_carga
                 FROM cargas
-                WHERE safra_id = %s;
+                WHERE safra_id = %s {filtro_data};
             """
-            cursor.execute(query, (safra_id,))
+            cursor.execute(query, tuple(params))
             row = cursor.fetchone()
             
             return {
                 "safra_id": safra_id,
-                "total_sacas": float(row[0]) if row else 0.0,
+                "total_sacas": int(row[0]) if row else 0,
                 "total_cargas": int(row[1]) if row else 0,
                 "media_sacas_por_carga": round(float(row[2]), 2) if row else 0.0
             }
@@ -60,7 +71,7 @@ def obter_total_sacas_por_cultura() -> list[dict[str, Any]]:
             rows = cursor.fetchall()
             
             return [
-                {"cultura": row[0], "total_sacas": float(row[1])}
+                {"cultura": row[0], "total_sacas": int(row[1])}
                 for row in rows
             ]
     finally:

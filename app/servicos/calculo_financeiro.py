@@ -1,20 +1,34 @@
-from typing import Any
+from datetime import date
+from typing import Any, Optional
 
 from app.database.conexao import obter_conexao
 
 
-def obter_resumo_financeiro_safra(safra_id: int) -> dict[str, Any]:
+def obter_resumo_financeiro_safra(
+    safra_id: int,
+    data_inicio: Optional[date] = None,
+    data_fim: Optional[date] = None,
+) -> dict[str, Any]:
     """
     Calcula a receita bruta, custos operacionais, mão de obra, lucro líquido
-    e margem de lucro para uma safra específica.
+    e margem de lucro para uma safra específica, com filtro opcional por período.
 
     :param safra_id: ID da safra a ser calculada.
+    :param data_inicio: Data inicial do período (opcional).
+    :param data_fim: Data final do período (opcional).
     :return: Dicionário com os totais financeiros e a margem de lucro.
     """
     conn = obter_conexao()
     try:
         with conn.cursor() as cursor:
-            query_receita = """
+            # 1. Filtro dinâmico para receita (cargas)
+            filtro_data_cargas = ""
+            params_receita: list[Any] = [safra_id]
+            if data_inicio and data_fim:
+                filtro_data_cargas = " AND car.data >= %s AND car.data <= %s"
+                params_receita.extend([data_inicio, data_fim])
+
+            query_receita = f"""
                 SELECT COALESCE(SUM(
                     CASE 
                         WHEN car.valor_total IS NOT NULL THEN car.valor_total
@@ -24,25 +38,39 @@ def obter_resumo_financeiro_safra(safra_id: int) -> dict[str, Any]:
                 ), 0) AS receita_bruta
                 FROM cargas car
                 LEFT JOIN precos p ON car.preco_id = p.id
-                WHERE car.safra_id = %s;
+                WHERE car.safra_id = %s {filtro_data_cargas};
             """
-            cursor.execute(query_receita, (safra_id,))
+            cursor.execute(query_receita, tuple(params_receita))
             receita_bruta = float(cursor.fetchone()[0])
 
-            query_custos = """
+            # 2. Filtro dinâmico para custos
+            filtro_data_custos = ""
+            params_custos: list[Any] = [safra_id]
+            if data_inicio and data_fim:
+                filtro_data_custos = " AND data >= %s AND data <= %s"
+                params_custos.extend([data_inicio, data_fim])
+
+            query_custos = f"""
                 SELECT COALESCE(SUM(valor), 0)
                 FROM custos
-                WHERE safra_id = %s;
+                WHERE safra_id = %s {filtro_data_custos};
             """
-            cursor.execute(query_custos, (safra_id,))
+            cursor.execute(query_custos, tuple(params_custos))
             custos_operacionais = float(cursor.fetchone()[0])
 
-            query_mao_de_obra = """
+            # 3. Filtro dinâmico para mão de obra
+            filtro_data_mo = ""
+            params_mo: list[Any] = [safra_id]
+            if data_inicio and data_fim:
+                filtro_data_mo = " AND data >= %s AND data <= %s"
+                params_mo.extend([data_inicio, data_fim])
+
+            query_mao_de_obra = f"""
                 SELECT COALESCE(SUM(valor), 0)
                 FROM pagamentos_trabalhadores
-                WHERE safra_id = %s;
+                WHERE safra_id = %s {filtro_data_mo};
             """
-            cursor.execute(query_mao_de_obra, (safra_id,))
+            cursor.execute(query_mao_de_obra, tuple(params_mo))
             custos_mao_de_obra = float(cursor.fetchone()[0])
 
             custo_total = custos_operacionais + custos_mao_de_obra

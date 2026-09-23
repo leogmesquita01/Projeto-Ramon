@@ -1,6 +1,6 @@
 import os
 import sys
-from datetime import date
+from datetime import date, timedelta
 
 # Garante que o diretório raiz do projeto esteja no caminho de busca de módulos
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
@@ -374,27 +374,102 @@ elif menu == "💰 'Meu Bolso' (Divisão do Dinheiro)":
     if not safra_selecionada:
         st.info("👈 Por favor, selecione uma safra na barra lateral.")
     else:
+        # Seletor de período com botões amigáveis
+        st.markdown(
+            """
+            <div style="background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.25); border-radius: 14px; padding: 0.8rem 1.2rem; margin-bottom: 1.2rem;">
+                <span style="color: #34D399; font-weight: 700; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.5px;">
+                    ⏳ Filtrar Rendimentos por Período:
+                </span>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+        filtro_col1, filtro_col2 = st.columns([2, 1])
+
+        with filtro_col1:
+            opcao_periodo = st.radio(
+                "Escolha o intervalo de tempo:",
+                [
+                    "📅 Semanal (Últimos 7 dias)",
+                    "📆 Quinzenal (Últimos 15 dias)",
+                    "🗓️ Mensal (Últimos 30 dias)",
+                    "🌾 Safra Completa (Acumulado)",
+                    "🎯 Escolher Datas Livres",
+                ],
+                horizontal=True,
+                label_visibility="collapsed",
+            )
+
+        hoje = date.today()
+        data_ini = None
+        data_fim = None
+        descricao_periodo = "Todo o período acumulado da safra"
+
+        if opcao_periodo == "📅 Semanal (Últimos 7 dias)":
+            data_ini = hoje - timedelta(days=7)
+            data_fim = hoje
+            descricao_periodo = f"Semana de {data_ini.strftime('%d/%m/%Y')} até {data_fim.strftime('%d/%m/%Y')}"
+        elif opcao_periodo == "📆 Quinzenal (Últimos 15 dias)":
+            data_ini = hoje - timedelta(days=15)
+            data_fim = hoje
+            descricao_periodo = f"Quinzena de {data_ini.strftime('%d/%m/%Y')} até {data_fim.strftime('%d/%m/%Y')}"
+        elif opcao_periodo == "🗓️ Mensal (Últimos 30 dias)":
+            data_ini = hoje - timedelta(days=30)
+            data_fim = hoje
+            descricao_periodo = f"Mês de {data_ini.strftime('%d/%m/%Y')} até {data_fim.strftime('%d/%m/%Y')}"
+        elif opcao_periodo == "🎯 Escolher Datas Livres":
+            with filtro_col2:
+                datas_escolhidas = st.date_input(
+                    "Selecione início e fim:",
+                    value=(hoje - timedelta(days=7), hoje),
+                    help="Escolha o dia inicial e o dia final do acerto",
+                )
+                if isinstance(datas_escolhidas, (tuple, list)) and len(datas_escolhidas) == 2:
+                    data_ini, data_fim = datas_escolhidas
+                    descricao_periodo = f"De {data_ini.strftime('%d/%m/%Y')} até {data_fim.strftime('%d/%m/%Y')}"
+
+        st.markdown(
+            f"""
+            <div style="margin-bottom: 1.2rem;">
+                <span class="agro-badge badge-ouro">Visualizando: {descricao_periodo}</span>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
         try:
-            resumo_fin = obter_resumo_financeiro_safra(safra_selecionada["id"])
-            resumo_sacas = obter_resumo_sacas_safra(safra_selecionada["id"])
+            resumo_fin = obter_resumo_financeiro_safra(
+                safra_selecionada["id"],
+                data_inicio=data_ini,
+                data_fim=data_fim,
+            )
+            resumo_sacas = obter_resumo_sacas_safra(
+                safra_selecionada["id"],
+                data_inicio=data_ini,
+                data_fim=data_fim,
+            )
 
             receita = resumo_fin["receita_bruta"]
             custos_op = resumo_fin["custos_operacionais"]
             mao_obra = resumo_fin["custos_mao_de_obra"]
             lucro = resumo_fin["lucro_liquido"]
             margem = resumo_fin["margem_lucro_pct"]
+            total_cargas_periodo = resumo_sacas["total_cargas"]
+            total_sacas_periodo = resumo_sacas["total_sacas"]
 
-            # Cartão de Destaque Máximo: Lucro Líquido Real
+            # Cartão de Destaque Máximo: Lucro Líquido Real do Período
             st.markdown(
                 f"""
                 <div class="agro-card-lucro">
-                    <span class="agro-badge badge-verde">🏆 SOBROU LIVRE NO SEU BOLSO (LUCRO REAL)</span>
+                    <span class="agro-badge badge-verde">🏆 SOBROU LIVRE NO SEU BOLSO NESTE PERÍODO</span>
                     <h1 style="color: #FFFFFF; font-size: 3.2rem; font-weight: 800; margin: 0.5rem 0;">
                         R$ {lucro:,.2f}
                     </h1>
                     <div style="background: rgba(0,0,0,0.25); border-radius: 999px; padding: 0.35rem 1rem; display: inline-block;">
                         <span style="color: #A7F3D0; font-size: 1rem; font-weight: 600;">
-                            Margem de Lucro: <strong>{margem:.1f}%</strong> do total vendido
+                            Margem Livre: <strong>{margem:.1f}%</strong> do faturamento deste período
                         </span>
                     </div>
                 </div>
@@ -410,7 +485,7 @@ elif menu == "💰 'Meu Bolso' (Divisão do Dinheiro)":
                     <div class="agro-card">
                         <span style="color: #94A3B8; font-size: 0.85rem; font-weight: 600; text-transform: uppercase;">💵 Total Vendido</span>
                         <h2 style="color: #F8FAFC; margin: 0.4rem 0 0 0; font-size: 1.6rem;">R$ {receita:,.2f}</h2>
-                        <span style="color: #64748B; font-size: 0.8rem;">Entrada bruta</span>
+                        <span style="color: #64748B; font-size: 0.8rem;">Entrada dos caminhões</span>
                     </div>
                     """,
                     unsafe_allow_html=True,
@@ -421,7 +496,7 @@ elif menu == "💰 'Meu Bolso' (Divisão do Dinheiro)":
                     <div class="agro-card">
                         <span style="color: #94A3B8; font-size: 0.85rem; font-weight: 600; text-transform: uppercase;">👷 Pessoal / Diárias</span>
                         <h2 style="color: #F87171; margin: 0.4rem 0 0 0; font-size: 1.6rem;">R$ {mao_obra:,.2f}</h2>
-                        <span style="color: #64748B; font-size: 0.8rem;">Mão de obra</span>
+                        <span style="color: #64748B; font-size: 0.8rem;">Mão de obra do período</span>
                     </div>
                     """,
                     unsafe_allow_html=True,
@@ -441,13 +516,49 @@ elif menu == "💰 'Meu Bolso' (Divisão do Dinheiro)":
                 st.markdown(
                     f"""
                     <div class="agro-card">
-                        <span style="color: #94A3B8; font-size: 0.85rem; font-weight: 600; text-transform: uppercase;">🌾 Volume Colhido</span>
-                        <h2 style="color: #34D399; margin: 0.4rem 0 0 0; font-size: 1.6rem;">{int(resumo_sacas['total_sacas'])} sacas</h2>
-                        <span style="color: #64748B; font-size: 0.8rem;">{resumo_sacas['total_cargas']} cargas registradas</span>
+                        <span style="color: #94A3B8; font-size: 0.85rem; font-weight: 600; text-transform: uppercase;">🌾 Volume Entregue</span>
+                        <h2 style="color: #34D399; margin: 0.4rem 0 0 0; font-size: 1.6rem;">{total_sacas_periodo} sacas</h2>
+                        <span style="color: #64748B; font-size: 0.8rem;">{total_cargas_periodo} caminhões neste período</span>
                     </div>
                     """,
                     unsafe_allow_html=True,
                 )
+
+            st.markdown("<br>", unsafe_allow_html=True)
+
+            # Tabela detalhada dos caminhões/cargas que compõem este período
+            st.markdown(
+                f"""
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.5rem;">
+                    <h3 style="color: #F8FAFC; margin: 0; font-size: 1.25rem;">
+                        🚚 Caminhões & Cargas Agrupadas no Período ({total_cargas_periodo})
+                    </h3>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
+
+            cargas_do_periodo = listar_ultimas_cargas(
+                safra_selecionada["id"],
+                limite=50,
+                data_inicio=data_ini,
+                data_fim=data_fim,
+            )
+
+            if cargas_do_periodo:
+                dados_tabela_periodo = [
+                    {
+                        "Carga #": f"#{c['id']}",
+                        "Data": c["data"].strftime("%d/%m/%Y") if hasattr(c["data"], "strftime") else str(c["data"]),
+                        "Total de Sacas": f"{int(c['quantidade_sacas'])} sacas",
+                        "Preço / Saca": f"R$ {c['valor_por_saca']:,.2f}",
+                        "Valor Bruto": f"R$ {c['valor_total']:,.2f}",
+                    }
+                    for c in cargas_do_periodo
+                ]
+                st.dataframe(dados_tabela_periodo, use_container_width=True)
+            else:
+                st.info(f"Nenhum caminhão registrado para {descricao_periodo.lower()}.")
 
         except Exception as e:
             st.error(f"Erro ao carregar dados financeiros da safra: {e}")
