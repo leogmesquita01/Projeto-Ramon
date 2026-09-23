@@ -1,0 +1,15 @@
+[theme]
+# Cor primária de destaque (verde esmeralda vibrante e moderno)
+primaryColor = "#10B981"
+
+# Fundo principal escuro e elegante (tom grafite floresta profundo, descansa a vista)
+backgroundColor = "#0C1412"
+
+# Fundo dos cartões, caixas de entrada e barra lateral
+secondaryBackgroundColor = "#152420"
+
+# Cor dos textos (branco gelo de alta legibilidade e contraste)
+textColor = "#F1F5F9"
+
+# Fonte moderna
+font = "sans serif"
