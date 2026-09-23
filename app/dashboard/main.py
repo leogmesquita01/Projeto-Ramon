@@ -61,16 +61,63 @@ st.markdown(
 
     /* Espaçamento superior para não colar na barra do Streamlit Cloud */
     .block-container {
-        padding-top: 2rem !important;
+        padding-top: 3.5rem !important;
         padding-bottom: 3rem !important;
     }
 
-    /* Ocultar menu hambúrguer, rodapé e barra de ferramentas padrão do Streamlit */
-    #MainMenu {visibility: hidden;}
-    footer {visibility: hidden;}
-    header {visibility: hidden;}
-    [data-testid="stToolbar"] {visibility: hidden;}
-    [data-testid="stDecoration"] {visibility: hidden;}
+    /* Cabeçalho superior visível para o botão Share */
+    header, [data-testid="stHeader"] {
+        visibility: visible !important;
+        background: transparent !important;
+    }
+
+    /* Ocultar menu hambúrguer (três pontinhos), rodapé e decorações */
+    #MainMenu, [data-testid="stMainMenu"], footer, [data-testid="stDecoration"] {
+        display: none !important;
+        visibility: hidden !important;
+    }
+
+    /* Ocultar indicador de status e botão de Rerun / Stop */
+    [data-testid="stStatusWidget"] {
+        display: none !important;
+        visibility: hidden !important;
+    }
+
+    /* Ocultar link para o GitHub */
+    header a[href*="github.com"],
+    [data-testid="stHeader"] a[href*="github.com"],
+    a[aria-label*="GitHub" i],
+    a[title*="GitHub" i] {
+        display: none !important;
+        visibility: hidden !important;
+    }
+
+    /* Ocultar botão de edição (lápis) do Streamlit Cloud */
+    header a[href*="share.streamlit.io"],
+    [data-testid="stHeader"] a[href*="share.streamlit.io"],
+    header button[title*="Edit" i],
+    [data-testid="stHeader"] button[title*="Edit" i],
+    [data-testid="manage-app-button"] {
+        display: none !important;
+        visibility: hidden !important;
+    }
+
+    /* Ocultar botão de favoritar (estrela) */
+    header button[title*="Star" i],
+    [data-testid="stHeader"] button[title*="Star" i],
+    header button[aria-label*="Star" i],
+    [data-testid="stHeader"] button[aria-label*="Star" i],
+    header button[title*="Favorite" i],
+    [data-testid="stHeader"] button[title*="Favorite" i] {
+        display: none !important;
+        visibility: hidden !important;
+    }
+
+    /* Ocultar botão de deploy se houver */
+    [data-testid="stDeployButton"], [data-testid="stAppDeployButton"] {
+        display: none !important;
+        visibility: hidden !important;
+    }
 
     /* Cartão base estilo container escuro sofisticado */
     .agro-card {
