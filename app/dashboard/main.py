@@ -38,6 +38,12 @@ st.markdown(
         font-family: 'Plus Jakarta Sans', sans-serif;
     }
 
+    /* Espaçamento superior para não colar na barra do Streamlit Cloud */
+    .block-container {
+        padding-top: 4.5rem !important;
+        padding-bottom: 3rem !important;
+    }
+
     /* Cartão base estilo container escuro sofisticado */
     .agro-card {
         background: linear-gradient(145deg, #13221C 0%, #172B23 100%);
@@ -246,36 +252,35 @@ if menu == "🚛 Carga do Caminhão":
         col_form, col_calculo = st.columns([1.1, 1], gap="large")
 
         with col_form:
-            st.markdown('<div class="agro-card">', unsafe_allow_html=True)
-            st.markdown("<h3 style='color: #34D399; margin-top: 0; font-size: 1.2rem;'>📝 Dados da Carga</h3>", unsafe_allow_html=True)
-            
-            data_carga = st.date_input(
-                "📅 Data do Carregamento:",
-                value=date.today(),
-                help="Data em que o caminhão foi carregado e despachado",
-            )
+            with st.container(border=True):
+                st.markdown("<h3 style='color: #34D399; margin-top: 0; font-size: 1.2rem;'>📝 Dados da Carga</h3>", unsafe_allow_html=True)
+                
+                data_carga = st.date_input(
+                    "📅 Data do Carregamento:",
+                    value=date.today(),
+                    help="Data em que o caminhão foi carregado e despachado",
+                )
 
-            qtd_sacas = st.number_input(
-                "📦 Quantidade de Sacas (Inteiras):",
-                min_value=1,
-                max_value=100000,
-                value=50,
-                step=1,
-                help="Número total de sacas cheias carregadas no caminhão",
-            )
+                qtd_sacas = st.number_input(
+                    "📦 Quantidade de Sacas (Inteiras):",
+                    min_value=1,
+                    max_value=100000,
+                    value=50,
+                    step=1,
+                    help="Número total de sacas cheias carregadas no caminhão",
+                )
 
-            preco_saca = st.number_input(
-                "🏷️ Preço Combinado por Saca (R$):",
-                min_value=0.0,
-                max_value=5000.0,
-                value=40.0,
-                step=0.50,
-                help="Preço acordado para a venda de cada saca",
-            )
+                preco_saca = st.number_input(
+                    "🏷️ Preço Combinado por Saca (R$):",
+                    min_value=0.0,
+                    max_value=5000.0,
+                    value=40.0,
+                    step=0.50,
+                    help="Preço acordado para a venda de cada saca",
+                )
 
-            st.markdown("<br>", unsafe_allow_html=True)
-            btn_salvar = st.button("💾 Salvar Carga no Sistema", type="primary")
-            st.markdown('</div>', unsafe_allow_html=True)
+                st.markdown("<br>", unsafe_allow_html=True)
+                btn_salvar = st.button("💾 Salvar Carga no Sistema", type="primary")
 
         with col_calculo:
             valor_total_calculado = qtd_sacas * preco_saca
