@@ -20,7 +20,7 @@ try:
     st.success("Conexão funcionando!")
     st.write("Culturas cadastradas:", resultado)
 
-except Exception as e:
+except Exception as e:  # noqa: BLE001
     st.error("Falha na conexão com o banco de dados.")
     st.exception(e)
 
