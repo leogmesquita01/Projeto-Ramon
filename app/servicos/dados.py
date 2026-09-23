@@ -4,11 +4,80 @@ from typing import Any, Optional
 from app.database.conexao import obter_conexao
 
 
+CULTURAS_PADRAO = [
+    "Milho",
+    "Feijão",
+    "Fava",
+    "Jerimum",
+    "Macaxeira",
+    "Batata",
+    "Mandioca",
+    "Melancia",
+]
+
+ICONES_CULTURAS = {
+    "Milho": "🌽",
+    "Feijão": "🌱",
+    "Fava": "🌿",
+    "Jerimum": "🎃",
+    "Macaxeira": "🥔",
+    "Batata": "🥔",
+    "Mandioca": "🍠",
+    "Melancia": "🍉",
+}
+
+
+def garantir_culturas_padrao() -> None:
+    """
+    Garante que todas as 8 culturas comerciais padrão existam no banco
+    e tenham um registro ativo de controle para vendas.
+    """
+    conn = obter_conexao()
+    try:
+        with conn.cursor() as cursor:
+            for cultura in CULTURAS_PADRAO:
+                cursor.execute(
+                    """
+                    INSERT INTO culturas (nome)
+                    VALUES (%s)
+                    ON CONFLICT (nome) DO UPDATE SET nome = EXCLUDED.nome
+                    RETURNING id;
+                    """,
+                    (cultura,),
+                )
+                cultura_id = cursor.fetchone()[0]
+
+                cursor.execute(
+                    """
+                    SELECT id FROM safras WHERE cultura_id = %s LIMIT 1;
+                    """,
+                    (cultura_id,),
+                )
+                safra_existente = cursor.fetchone()
+                if not safra_existente:
+                    cursor.execute(
+                        """
+                        INSERT INTO safras (cultura_id, data_inicio, status)
+                        VALUES (%s, CURRENT_DATE, 'em_andamento');
+                        """,
+                        (cultura_id,),
+                    )
+            conn.commit()
+    except Exception:
+        # Se houver qualquer falha transitória, segue a execução normal
+        pass
+    finally:
+        conn.close()
+
+
 def listar_safras_ativas() -> list[dict[str, Any]]:
     """
-    Retorna a lista de safras em andamento ou cadastradas no banco,
-    com o nome da respectiva cultura para exibição no formulário.
+    Retorna a lista de culturas/produtos comerciais ativos no banco,
+    com ícones representativos para facilitar a seleção.
     """
+    # Garante que as 8 culturas padrão estejam cadastradas
+    garantir_culturas_padrao()
+
     conn = obter_conexao()
     try:
         with conn.cursor() as cursor:
@@ -21,7 +90,7 @@ def listar_safras_ativas() -> list[dict[str, Any]]:
                     c.id AS cultura_id
                 FROM safras s
                 INNER JOIN culturas c ON s.cultura_id = c.id
-                ORDER BY s.id DESC;
+                ORDER BY c.nome ASC;
             """
             cursor.execute(query)
             linhas = cursor.fetchall()
@@ -33,7 +102,8 @@ def listar_safras_ativas() -> list[dict[str, Any]]:
                     "data_inicio": linha[2],
                     "status": linha[3],
                     "cultura_id": linha[4],
-                    "rotulo": f"#{linha[0]} - {linha[1]} (Início: {linha[2].strftime('%d/%m/%Y') if hasattr(linha[2], 'strftime') else linha[2]})",
+                    "icone": ICONES_CULTURAS.get(linha[1], "🌾"),
+                    "rotulo": f"{ICONES_CULTURAS.get(linha[1], '🌾')} {linha[1]}",
                 }
                 for linha in linhas
             ]

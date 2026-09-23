@@ -177,20 +177,20 @@ with st.sidebar:
     if safras:
         opcoes_safras = {s["rotulo"]: s for s in safras}
         safra_escolhida_rotulo = st.selectbox(
-            "🌱 Safra Ativa:",
+            "🌾 Produto / Cultura:",
             options=list(opcoes_safras.keys()),
-            help="Selecione qual colheita você está gerenciando agora",
+            help="Selecione qual produto você está vendendo e gerenciando agora",
         )
         safra_selecionada = opcoes_safras[safra_escolhida_rotulo]
     else:
-        st.warning("Nenhuma safra cadastrada ainda.")
-        with st.expander("➕ Cadastrar 1ª Safra", expanded=True):
-            nome_cultura_nova = st.text_input("Cultura (ex: Milho, Café, Soja):", value="Milho")
-            data_inicio_nova = st.date_input("Data de Início:", value=date.today())
-            if st.button("Criar Safra Agora"):
+        st.warning("Nenhum produto cadastrado ainda.")
+        with st.expander("➕ Cadastrar Novo Produto"):
+            nome_cultura_nova = st.text_input("Nome da Cultura (ex: Melancia, Fava):")
+            data_inicio_nova = st.date_input("Data:", value=date.today())
+            if st.button("Cadastrar Produto"):
                 if nome_cultura_nova.strip():
                     nova_id = criar_safra_rapida(nome_cultura_nova, data_inicio_nova)
-                    st.success(f"Safra #{nova_id} iniciada com sucesso!")
+                    st.success(f"Produto {nome_cultura_nova} adicionado!")
                     st.rerun()
 
     st.divider()
@@ -216,22 +216,19 @@ with st.sidebar:
 # 4. BANNER SUPERIOR INFORMATIVO
 # -----------------------------------------------------------------------------
 if safra_selecionada:
-    data_formatada = (
-        safra_selecionada["data_inicio"].strftime("%d/%m/%Y")
-        if hasattr(safra_selecionada["data_inicio"], "strftime")
-        else str(safra_selecionada["data_inicio"])
-    )
+    icone_produto = safra_selecionada.get("icone", "🌾")
     st.markdown(
         f"""
         <div class="hero-banner">
             <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
                 <div>
-                    <span class="agro-badge badge-verde">Safra Ativa</span>
-                    <strong style="margin-left: 8px; font-size: 1.15rem; color: #F8FAFC;">{safra_selecionada['cultura_nome']}</strong>
-                    <span style="color: #94A3B8; font-size: 0.9rem;"> • Iniciada em {data_formatada}</span>
+                    <span class="agro-badge badge-verde">Produto Selecionado</span>
+                    <strong style="margin-left: 8px; font-size: 1.25rem; color: #F8FAFC;">
+                        {icone_produto} {safra_selecionada['cultura_nome']}
+                    </strong>
                 </div>
                 <div>
-                    <span class="agro-badge badge-ouro">Status: {safra_selecionada['status'].replace('_', ' ').title()}</span>
+                    <span class="agro-badge badge-ouro">Vendas & Despesas Ativas</span>
                 </div>
             </div>
         </div>
@@ -263,7 +260,7 @@ if menu == "🚛 Carga do Caminhão":
     )
 
     if not safra_selecionada:
-        st.info("👈 Por favor, crie ou selecione uma safra na barra lateral para começar.")
+        st.info("👈 Por favor, selecione um produto na barra lateral para começar.")
     else:
         col_form, col_calculo = st.columns([1.1, 1], gap="large")
 
@@ -341,11 +338,13 @@ if menu == "🚛 Carga do Caminhão":
 
         st.markdown("<br>", unsafe_allow_html=True)
 
-        # Tabela com as últimas cargas registradas nesta safra
+        # Tabela com as últimas cargas registradas desta cultura
         st.markdown(
-            """
+            f"""
             <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.5rem;">
-                <h3 style="color: #F8FAFC; margin: 0; font-size: 1.25rem;">📋 Histórico de Cargas Desta Safra</h3>
+                <h3 style="color: #F8FAFC; margin: 0; font-size: 1.25rem;">
+                    📋 Histórico de Cargas de {safra_selecionada['cultura_nome']}
+                </h3>
             </div>
             """,
             unsafe_allow_html=True,
@@ -365,7 +364,7 @@ if menu == "🚛 Carga do Caminhão":
                 ]
                 st.dataframe(dados_tabela, use_container_width=True)
             else:
-                st.info("Nenhuma carga registrada para esta safra ainda.")
+                st.info(f"Nenhuma carga de {safra_selecionada['cultura_nome']} registrada ainda.")
         except Exception as e:
             st.error(f"Erro ao carregar lista de cargas: {e}")
 
@@ -388,7 +387,7 @@ elif menu == "💰 'Meu Bolso' (Divisão do Dinheiro)":
     )
 
     if not safra_selecionada:
-        st.info("👈 Por favor, selecione uma safra na barra lateral.")
+        st.info("👈 Por favor, selecione um produto na barra lateral.")
     else:
         # Seletor de período com botões amigáveis
         st.markdown(
@@ -411,7 +410,7 @@ elif menu == "💰 'Meu Bolso' (Divisão do Dinheiro)":
                     "📅 Semanal (Últimos 7 dias)",
                     "📆 Quinzenal (Últimos 15 dias)",
                     "🗓️ Mensal (Últimos 30 dias)",
-                    "🌾 Safra Completa (Acumulado)",
+                    "🌾 Acumulado Geral (Tudo)",
                     "🎯 Escolher Datas Livres",
                 ],
                 horizontal=True,
@@ -421,7 +420,7 @@ elif menu == "💰 'Meu Bolso' (Divisão do Dinheiro)":
         hoje = date.today()
         data_ini = None
         data_fim = None
-        descricao_periodo = "Todo o período acumulado da safra"
+        descricao_periodo = f"Todo o acumulado de {safra_selecionada['cultura_nome']}"
 
         if opcao_periodo == "📅 Semanal (Últimos 7 dias)":
             data_ini = hoje - timedelta(days=7)
@@ -547,7 +546,7 @@ elif menu == "💰 'Meu Bolso' (Divisão do Dinheiro)":
                 f"""
                 <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.5rem;">
                     <h3 style="color: #F8FAFC; margin: 0; font-size: 1.25rem;">
-                        🚚 Caminhões & Cargas Agrupadas no Período ({total_cargas_periodo})
+                        🚚 Caminhões & Cargas de {safra_selecionada['cultura_nome']} no Período ({total_cargas_periodo})
                     </h3>
                 </div>
                 """,
@@ -692,7 +691,7 @@ elif menu == "👷 Trabalhadores & Diárias":
         st.markdown("<br>", unsafe_allow_html=True)
 
         # Histórico de pagamentos
-        st.markdown("<h3 style='color: #F8FAFC; margin: 0 0 0.5rem 0; font-size: 1.25rem;'>📋 Histórico de Pagamentos de Mão de Obra Desta Safra</h3>", unsafe_allow_html=True)
+        st.markdown(f"<h3 style='color: #F8FAFC; margin: 0 0 0.5rem 0; font-size: 1.25rem;'>📋 Histórico de Pagamentos de Mão de Obra ({safra_selecionada['cultura_nome']})</h3>", unsafe_allow_html=True)
         try:
             pagamentos = listar_ultimos_pagamentos(safra_selecionada["id"])
             if pagamentos:
@@ -707,7 +706,7 @@ elif menu == "👷 Trabalhadores & Diárias":
                 ]
                 st.dataframe(dados_pgto, use_container_width=True)
             else:
-                st.info("Nenhum pagamento registrado nesta safra ainda.")
+                st.info(f"Nenhum pagamento registrado para {safra_selecionada['cultura_nome']} ainda.")
         except Exception as e:
             st.error(f"Erro ao buscar histórico de pagamentos: {e}")
 
@@ -815,7 +814,7 @@ elif menu == "💸 Custos & Insumos":
         st.markdown("<br>", unsafe_allow_html=True)
 
         # Histórico de custos
-        st.markdown("<h3 style='color: #F8FAFC; margin: 0 0 0.5rem 0; font-size: 1.25rem;'>📋 Histórico de Gastos Desta Safra</h3>", unsafe_allow_html=True)
+        st.markdown(f"<h3 style='color: #F8FAFC; margin: 0 0 0.5rem 0; font-size: 1.25rem;'>📋 Histórico de Gastos ({safra_selecionada['cultura_nome']})</h3>", unsafe_allow_html=True)
         try:
             custos = listar_ultimos_custos(safra_selecionada["id"])
             if custos:
@@ -830,6 +829,6 @@ elif menu == "💸 Custos & Insumos":
                 ]
                 st.dataframe(dados_custos, use_container_width=True)
             else:
-                st.info("Nenhuma despesa registrada nesta safra ainda.")
+                st.info(f"Nenhuma despesa registrada para {safra_selecionada['cultura_nome']} ainda.")
         except Exception as e:
             st.error(f"Erro ao buscar despesas: {e}")
