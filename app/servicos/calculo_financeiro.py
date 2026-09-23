@@ -5,15 +5,15 @@ from app.database.conexao import obter_conexao
 
 
 def obter_resumo_financeiro_safra(
-    safra_id: int,
+    safra_id: Optional[int] = None,
     data_inicio: Optional[date] = None,
     data_fim: Optional[date] = None,
 ) -> dict[str, Any]:
     """
     Calcula a receita bruta, custos operacionais, mão de obra, lucro líquido
-    e margem de lucro para uma safra específica, com filtro opcional por período.
+    e margem de lucro. Se safra_id for None, consolida TODAS as culturas (Bolso Geral).
 
-    :param safra_id: ID da safra a ser calculada.
+    :param safra_id: ID da safra/cultura específica (opcional, None para todas).
     :param data_inicio: Data inicial do período (opcional).
     :param data_fim: Data final do período (opcional).
     :return: Dicionário com os totais financeiros e a margem de lucro.
@@ -22,10 +22,13 @@ def obter_resumo_financeiro_safra(
     try:
         with conn.cursor() as cursor:
             # 1. Filtro dinâmico para receita (cargas)
-            filtro_data_cargas = ""
-            params_receita: list[Any] = [safra_id]
+            filtro_cargas = "WHERE 1=1"
+            params_receita: list[Any] = []
+            if safra_id is not None:
+                filtro_cargas += " AND car.safra_id = %s"
+                params_receita.append(safra_id)
             if data_inicio and data_fim:
-                filtro_data_cargas = " AND car.data >= %s AND car.data <= %s"
+                filtro_cargas += " AND car.data >= %s AND car.data <= %s"
                 params_receita.extend([data_inicio, data_fim])
 
             query_receita = f"""
@@ -38,37 +41,43 @@ def obter_resumo_financeiro_safra(
                 ), 0) AS receita_bruta
                 FROM cargas car
                 LEFT JOIN precos p ON car.preco_id = p.id
-                WHERE car.safra_id = %s {filtro_data_cargas};
+                {filtro_cargas};
             """
             cursor.execute(query_receita, tuple(params_receita))
             receita_bruta = float(cursor.fetchone()[0])
 
             # 2. Filtro dinâmico para custos
-            filtro_data_custos = ""
-            params_custos: list[Any] = [safra_id]
+            filtro_custos = "WHERE 1=1"
+            params_custos: list[Any] = []
+            if safra_id is not None:
+                filtro_custos += " AND safra_id = %s"
+                params_custos.append(safra_id)
             if data_inicio and data_fim:
-                filtro_data_custos = " AND data >= %s AND data <= %s"
+                filtro_custos += " AND data >= %s AND data <= %s"
                 params_custos.extend([data_inicio, data_fim])
 
             query_custos = f"""
                 SELECT COALESCE(SUM(valor), 0)
                 FROM custos
-                WHERE safra_id = %s {filtro_data_custos};
+                {filtro_custos};
             """
             cursor.execute(query_custos, tuple(params_custos))
             custos_operacionais = float(cursor.fetchone()[0])
 
             # 3. Filtro dinâmico para mão de obra
-            filtro_data_mo = ""
-            params_mo: list[Any] = [safra_id]
+            filtro_mo = "WHERE 1=1"
+            params_mo: list[Any] = []
+            if safra_id is not None:
+                filtro_mo += " AND safra_id = %s"
+                params_mo.append(safra_id)
             if data_inicio and data_fim:
-                filtro_data_mo = " AND data >= %s AND data <= %s"
+                filtro_mo += " AND data >= %s AND data <= %s"
                 params_mo.extend([data_inicio, data_fim])
 
             query_mao_de_obra = f"""
                 SELECT COALESCE(SUM(valor), 0)
                 FROM pagamentos_trabalhadores
-                WHERE safra_id = %s {filtro_data_mo};
+                {filtro_mo};
             """
             cursor.execute(query_mao_de_obra, tuple(params_mo))
             custos_mao_de_obra = float(cursor.fetchone()[0])
@@ -95,12 +104,60 @@ def obter_resumo_financeiro_safra(
         conn.close()
 
 
+def obter_vendas_por_cultura(
+    data_inicio: Optional[date] = None,
+    data_fim: Optional[date] = None,
+) -> list[dict[str, Any]]:
+    """
+    Retorna o volume total de vendas e quantidade de sacas agrupadas por produto no período.
+    """
+    conn = obter_conexao()
+    try:
+        with conn.cursor() as cursor:
+            filtro = "WHERE 1=1"
+            params: list[Any] = []
+            if data_inicio and data_fim:
+                filtro += " AND car.data >= %s AND car.data <= %s"
+                params.extend([data_inicio, data_fim])
+
+            query = f"""
+                SELECT 
+                    cul.nome AS cultura,
+                    COALESCE(SUM(car.quantidade_sacas), 0) AS total_sacas,
+                    COALESCE(SUM(
+                        CASE 
+                            WHEN car.valor_total IS NOT NULL THEN car.valor_total
+                            WHEN p.valor_por_saca IS NOT NULL THEN car.quantidade_sacas * p.valor_por_saca
+                            ELSE 0
+                        END
+                    ), 0) AS total_valor,
+                    COUNT(car.id) AS total_cargas
+                FROM cargas car
+                INNER JOIN safras s ON car.safra_id = s.id
+                INNER JOIN culturas cul ON s.cultura_id = cul.id
+                LEFT JOIN precos p ON car.preco_id = p.id
+                {filtro}
+                GROUP BY cul.id, cul.nome
+                ORDER BY total_valor DESC;
+            """
+            cursor.execute(query, tuple(params))
+            linhas = cursor.fetchall()
+            return [
+                {
+                    "cultura": l[0],
+                    "total_sacas": int(l[1]),
+                    "total_valor": float(l[2]),
+                    "total_cargas": int(l[3]),
+                }
+                for l in linhas
+            ]
+    finally:
+        conn.close()
+
+
 def obter_historico_precos_cultura(cultura_id: int) -> list[dict[str, Any]]:
     """
     Retorna o histórico de preços por saca de uma cultura ordenado por data.
-
-    :param cultura_id: ID da cultura.
-    :return: Lista de dicionários com data e valor por saca.
     """
     conn = obter_conexao()
     try:

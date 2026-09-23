@@ -153,21 +153,25 @@ def salvar_carga(
 
 
 def listar_ultimas_cargas(
-    safra_id: int,
+    safra_id: Optional[int] = None,
     limite: int = 50,
     data_inicio: Optional[date] = None,
     data_fim: Optional[date] = None,
 ) -> list[dict[str, Any]]:
     """
-    Retorna as cargas cadastradas para uma safra específica, com filtro opcional por período.
+    Retorna as cargas cadastradas, com filtro opcional por cultura e por período.
+    Se safra_id for None, traz as cargas de todas as culturas.
     """
     conn = obter_conexao()
     try:
         with conn.cursor() as cursor:
-            filtro_data = ""
-            params: list[Any] = [safra_id]
+            filtro = "WHERE 1=1"
+            params: list[Any] = []
+            if safra_id is not None:
+                filtro += " AND car.safra_id = %s"
+                params.append(safra_id)
             if data_inicio and data_fim:
-                filtro_data = " AND car.data >= %s AND car.data <= %s"
+                filtro += " AND car.data >= %s AND car.data <= %s"
                 params.extend([data_inicio, data_fim])
             params.append(limite)
 
@@ -177,10 +181,13 @@ def listar_ultimas_cargas(
                     car.data,
                     car.quantidade_sacas,
                     COALESCE(p.valor_por_saca, 0) AS valor_por_saca,
-                    COALESCE(car.valor_total, car.quantidade_sacas * COALESCE(p.valor_por_saca, 0)) AS valor_total
+                    COALESCE(car.valor_total, car.quantidade_sacas * COALESCE(p.valor_por_saca, 0)) AS valor_total,
+                    cul.nome AS cultura_nome
                 FROM cargas car
+                INNER JOIN safras s ON car.safra_id = s.id
+                INNER JOIN culturas cul ON s.cultura_id = cul.id
                 LEFT JOIN precos p ON car.preco_id = p.id
-                WHERE car.safra_id = %s {filtro_data}
+                {filtro}
                 ORDER BY car.data DESC, car.id DESC
                 LIMIT %s;
             """
@@ -194,6 +201,8 @@ def listar_ultimas_cargas(
                     "quantidade_sacas": int(linha[2]),
                     "valor_por_saca": float(linha[3]),
                     "valor_total": float(linha[4]),
+                    "cultura_nome": linha[5],
+                    "icone": ICONES_CULTURAS.get(linha[5], "🌾"),
                 }
                 for linha in linhas
             ]
@@ -261,29 +270,35 @@ def salvar_custo(safra_id: int, descricao: str, valor: float, data_custo: date) 
 
 
 def listar_ultimos_custos(
-    safra_id: int,
+    safra_id: Optional[int] = None,
     limite: int = 50,
     data_inicio: Optional[date] = None,
     data_fim: Optional[date] = None,
 ) -> list[dict[str, Any]]:
     """
-    Retorna os custos lançados para uma safra, com filtro opcional por período.
+    Retorna os custos lançados, com filtro opcional por cultura e por período.
+    Se safra_id for None, traz todos os custos consolidados.
     """
     conn = obter_conexao()
     try:
         with conn.cursor() as cursor:
-            filtro_data = ""
-            params: list[Any] = [safra_id]
+            filtro = "WHERE 1=1"
+            params: list[Any] = []
+            if safra_id is not None:
+                filtro += " AND c.safra_id = %s"
+                params.append(safra_id)
             if data_inicio and data_fim:
-                filtro_data = " AND data >= %s AND data <= %s"
+                filtro += " AND c.data >= %s AND c.data <= %s"
                 params.extend([data_inicio, data_fim])
             params.append(limite)
 
             query = f"""
-                SELECT id, descricao, valor, data
-                FROM custos
-                WHERE safra_id = %s {filtro_data}
-                ORDER BY data DESC, id DESC
+                SELECT c.id, c.descricao, c.valor, c.data, cul.nome
+                FROM custos c
+                LEFT JOIN safras s ON c.safra_id = s.id
+                LEFT JOIN culturas cul ON s.cultura_id = cul.id
+                {filtro}
+                ORDER BY c.data DESC, c.id DESC
                 LIMIT %s;
             """
             cursor.execute(query, tuple(params))
@@ -295,6 +310,8 @@ def listar_ultimos_custos(
                     "descricao": linha[1],
                     "valor": float(linha[2]),
                     "data": linha[3],
+                    "cultura_nome": linha[4] if linha[4] else "Geral",
+                    "icone": ICONES_CULTURAS.get(linha[4], "🌾"),
                 }
                 for linha in linhas
             ]
@@ -372,29 +389,35 @@ def salvar_pagamento_trabalhador(
 
 
 def listar_ultimos_pagamentos(
-    safra_id: int,
+    safra_id: Optional[int] = None,
     limite: int = 50,
     data_inicio: Optional[date] = None,
     data_fim: Optional[date] = None,
 ) -> list[dict[str, Any]]:
     """
-    Retorna o histórico de pagamentos de trabalhadores feitos em uma safra.
+    Retorna o histórico de pagamentos de trabalhadores, com filtro opcional por cultura e por período.
+    Se safra_id for None, traz todos os pagamentos consolidados.
     """
     conn = obter_conexao()
     try:
         with conn.cursor() as cursor:
-            filtro_data = ""
-            params: list[Any] = [safra_id]
+            filtro = "WHERE 1=1"
+            params: list[Any] = []
+            if safra_id is not None:
+                filtro += " AND p.safra_id = %s"
+                params.append(safra_id)
             if data_inicio and data_fim:
-                filtro_data = " AND p.data >= %s AND p.data <= %s"
+                filtro += " AND p.data >= %s AND p.data <= %s"
                 params.extend([data_inicio, data_fim])
             params.append(limite)
 
             query = f"""
-                SELECT p.id, t.nome, p.valor, p.data, t.id
+                SELECT p.id, t.nome, p.valor, p.data, t.id, cul.nome
                 FROM pagamentos_trabalhadores p
                 INNER JOIN trabalhadores t ON p.trabalhador_id = t.id
-                WHERE p.safra_id = %s {filtro_data}
+                LEFT JOIN safras s ON p.safra_id = s.id
+                LEFT JOIN culturas cul ON s.cultura_id = cul.id
+                {filtro}
                 ORDER BY p.data DESC, p.id DESC
                 LIMIT %s;
             """
@@ -408,6 +431,8 @@ def listar_ultimos_pagamentos(
                     "valor": float(l[2]),
                     "data": l[3],
                     "trabalhador_id": l[4],
+                    "cultura_nome": l[5] if l[5] else "Geral",
+                    "icone": ICONES_CULTURAS.get(l[5], "🌾"),
                 }
                 for l in linhas
             ]
