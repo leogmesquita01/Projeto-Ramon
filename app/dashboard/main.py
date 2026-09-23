@@ -59,92 +59,28 @@ st.markdown(
         font-family: 'Plus Jakarta Sans', sans-serif;
     }
 
-    /* Espaçamento superior para não colar na barra do Streamlit Cloud */
+    /* Espaçamento superior otimizado (sem cabeçalho) */
     .block-container {
-        padding-top: 3.5rem !important;
+        padding-top: 2rem !important;
         padding-bottom: 3rem !important;
     }
 
-    /* Cabeçalho superior visível para o botão Share */
+    /* Ocultar completamente todo o cabeçalho superior, menus e barras */
     header, [data-testid="stHeader"] {
-        visibility: visible !important;
-        background: transparent !important;
-    }
-
-    /* Ocultar menu hambúrguer (três pontinhos), rodapé e decorações */
-    #MainMenu, [data-testid="stMainMenu"], footer, [data-testid="stDecoration"] {
         display: none !important;
         visibility: hidden !important;
+        height: 0 !important;
     }
 
-    /* Ocultar indicador de status e botão de Rerun / Stop */
+    /* Ocultar menu hambúrguer, rodapé, barra de ferramentas e decorações */
+    #MainMenu, 
+    [data-testid="stMainMenu"], 
+    footer, 
+    [data-testid="stDecoration"], 
+    [data-testid="stToolbar"], 
     [data-testid="stStatusWidget"] {
         display: none !important;
         visibility: hidden !important;
-    }
-
-    /* Ocultar ícone do GitHub (usando ID oficial e seletores amplos) */
-    #GithubIcon,
-    header a,
-    [data-testid="stHeader"] a,
-    .stApp header a,
-    a[href*="github.com"],
-    a[aria-label*="GitHub" i],
-    a[title*="GitHub" i],
-    div[class*="toolbar" i] a {
-        display: none !important;
-        visibility: hidden !important;
-        width: 0 !important;
-        height: 0 !important;
-        opacity: 0 !important;
-        pointer-events: none !important;
-    }
-
-    /* Ocultar botão de edição (lápis) do Streamlit Cloud */
-    a[href*="share.streamlit.io"],
-    a[href*="streamlit.io"],
-    [data-testid="manage-app-button"],
-    button[title*="Edit" i],
-    button[aria-label*="Edit" i],
-    [data-testid="stHeader"] button[title*="Edit" i],
-    [data-testid="stHeader"] button[aria-label*="Edit" i] {
-        display: none !important;
-        visibility: hidden !important;
-        width: 0 !important;
-        height: 0 !important;
-        opacity: 0 !important;
-        pointer-events: none !important;
-    }
-
-    /* Ocultar botão de favoritar (estrela) e botões que contêm apenas ícone SVG */
-    button[title*="Star" i],
-    button[aria-label*="Star" i],
-    button[title*="Favorite" i],
-    button[aria-label*="Favorite" i],
-    header button:has(svg:only-child),
-    [data-testid="stHeader"] button:has(svg:only-child),
-    div[class*="toolbar" i] button:has(svg:only-child) {
-        display: none !important;
-        visibility: hidden !important;
-        width: 0 !important;
-        height: 0 !important;
-        opacity: 0 !important;
-        pointer-events: none !important;
-    }
-
-    /* Ocultar botão de deploy se houver */
-    [data-testid="stDeployButton"], [data-testid="stAppDeployButton"] {
-        display: none !important;
-        visibility: hidden !important;
-    }
-
-    /* Garantir que o botão Share continue visível e perfeitamente legível */
-    [data-testid="stShareButton"],
-    button[aria-label*="Share" i],
-    button[title*="Share" i] {
-        display: inline-flex !important;
-        visibility: visible !important;
-        opacity: 1 !important;
     }
 
     /* Cartão base estilo container escuro sofisticado */

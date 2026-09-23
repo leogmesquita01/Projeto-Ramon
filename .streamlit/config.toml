@@ -17,3 +17,4 @@ font = "sans serif"
 [client]
 # Permite exibir mensagens de erro detalhadas em vez de mensagem oculta
 showErrorDetails = true
+toolbarMode = "minimal"
