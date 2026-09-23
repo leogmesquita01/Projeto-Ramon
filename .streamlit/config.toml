@@ -13,3 +13,7 @@ textColor = "#F1F5F9"
 
 # Fonte moderna
 font = "sans serif"
+
+[client]
+# Permite exibir mensagens de erro detalhadas em vez de mensagem oculta
+showErrorDetails = true

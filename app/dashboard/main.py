@@ -5,7 +5,17 @@ from datetime import date, timedelta
 # Garante que o diretório raiz do projeto esteja no caminho de busca de módulos
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
 
+import importlib
 import streamlit as st
+
+import app.servicos.calculo_financeiro
+import app.servicos.calculo_sacas
+import app.servicos.dados
+
+importlib.reload(app.servicos.calculo_financeiro)
+importlib.reload(app.servicos.calculo_sacas)
+importlib.reload(app.servicos.dados)
+
 from app.servicos.calculo_financeiro import obter_resumo_financeiro_safra
 from app.servicos.calculo_sacas import obter_resumo_sacas_safra
 from app.servicos.dados import (
