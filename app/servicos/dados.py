@@ -1,5 +1,5 @@
 from datetime import date
-from typing import Any
+from typing import Any, Optional
 
 from app.database.conexao import obter_conexao
 
@@ -54,7 +54,6 @@ def salvar_carga(
     conn = obter_conexao()
     try:
         with conn.cursor() as cursor:
-            # 1. Registra o preço praticado nesta data para a cultura
             cursor.execute(
                 """
                 INSERT INTO precos (cultura_id, data, valor_por_saca)
@@ -67,7 +66,6 @@ def salvar_carga(
 
             valor_total = round(quantidade_sacas * valor_por_saca, 2)
 
-            # 2. Registra a carga vinculada à safra e ao preço
             cursor.execute(
                 """
                 INSERT INTO cargas (safra_id, data, quantidade_sacas, preco_id, valor_total)
@@ -136,7 +134,6 @@ def listar_ultimas_cargas(
 def criar_safra_rapida(nome_cultura: str, data_inicio: date) -> int:
     """
     Cria uma cultura (se não existir) e abre uma nova safra imediatamente.
-    Útil para inicialização rápida sem complicação.
     """
     conn = obter_conexao()
     try:
@@ -164,5 +161,185 @@ def criar_safra_rapida(nome_cultura: str, data_inicio: date) -> int:
 
             conn.commit()
             return safra_id
+    finally:
+        conn.close()
+
+
+# -----------------------------------------------------------------------------
+# OPERAÇÕES DE CUSTOS & DESPESAS (Energia do moedor, embalagens, insumos)
+# -----------------------------------------------------------------------------
+def salvar_custo(safra_id: int, descricao: str, valor: float, data_custo: date) -> int:
+    """
+    Registra uma despesa/custo operacional da safra.
+    """
+    conn = obter_conexao()
+    try:
+        with conn.cursor() as cursor:
+            cursor.execute(
+                """
+                INSERT INTO custos (safra_id, descricao, valor, data)
+                VALUES (%s, %s, %s, %s)
+                RETURNING id;
+                """,
+                (safra_id, descricao.strip(), valor, data_custo),
+            )
+            custo_id = cursor.fetchone()[0]
+            conn.commit()
+            return custo_id
+    finally:
+        conn.close()
+
+
+def listar_ultimos_custos(
+    safra_id: int,
+    limite: int = 50,
+    data_inicio: Optional[date] = None,
+    data_fim: Optional[date] = None,
+) -> list[dict[str, Any]]:
+    """
+    Retorna os custos lançados para uma safra, com filtro opcional por período.
+    """
+    conn = obter_conexao()
+    try:
+        with conn.cursor() as cursor:
+            filtro_data = ""
+            params: list[Any] = [safra_id]
+            if data_inicio and data_fim:
+                filtro_data = " AND data >= %s AND data <= %s"
+                params.extend([data_inicio, data_fim])
+            params.append(limite)
+
+            query = f"""
+                SELECT id, descricao, valor, data
+                FROM custos
+                WHERE safra_id = %s {filtro_data}
+                ORDER BY data DESC, id DESC
+                LIMIT %s;
+            """
+            cursor.execute(query, tuple(params))
+            linhas = cursor.fetchall()
+
+            return [
+                {
+                    "id": linha[0],
+                    "descricao": linha[1],
+                    "valor": float(linha[2]),
+                    "data": linha[3],
+                }
+                for linha in linhas
+            ]
+    finally:
+        conn.close()
+
+
+# -----------------------------------------------------------------------------
+# OPERAÇÕES DE TRABALHADORES & DIÁRIAS (Mão de obra)
+# -----------------------------------------------------------------------------
+def listar_trabalhadores() -> list[dict[str, Any]]:
+    """
+    Retorna a lista de todos os trabalhadores cadastrados.
+    """
+    conn = obter_conexao()
+    try:
+        with conn.cursor() as cursor:
+            cursor.execute("SELECT id, nome, tipo_pagamento FROM trabalhadores ORDER BY nome ASC;")
+            linhas = cursor.fetchall()
+            return [
+                {"id": l[0], "nome": l[1], "tipo_pagamento": l[2]}
+                for l in linhas
+            ]
+    finally:
+        conn.close()
+
+
+def cadastrar_trabalhador(nome: str, tipo_pagamento: str = "diaria") -> int:
+    """
+    Cadastra um novo trabalhador no sistema.
+    """
+    conn = obter_conexao()
+    try:
+        with conn.cursor() as cursor:
+            cursor.execute(
+                """
+                INSERT INTO trabalhadores (nome, tipo_pagamento)
+                VALUES (%s, %s)
+                RETURNING id;
+                """,
+                (nome.strip().title(), tipo_pagamento),
+            )
+            trabalhador_id = cursor.fetchone()[0]
+            conn.commit()
+            return trabalhador_id
+    finally:
+        conn.close()
+
+
+def salvar_pagamento_trabalhador(
+    trabalhador_id: int,
+    safra_id: int,
+    data_pagamento: date,
+    valor: float,
+) -> int:
+    """
+    Registra o pagamento de diária ou serviço feito a um trabalhador em uma safra.
+    """
+    conn = obter_conexao()
+    try:
+        with conn.cursor() as cursor:
+            cursor.execute(
+                """
+                INSERT INTO pagamentos_trabalhadores (trabalhador_id, safra_id, data, valor)
+                VALUES (%s, %s, %s, %s)
+                RETURNING id;
+                """,
+                (trabalhador_id, safra_id, data_pagamento, valor),
+            )
+            pagamento_id = cursor.fetchone()[0]
+            conn.commit()
+            return pagamento_id
+    finally:
+        conn.close()
+
+
+def listar_ultimos_pagamentos(
+    safra_id: int,
+    limite: int = 50,
+    data_inicio: Optional[date] = None,
+    data_fim: Optional[date] = None,
+) -> list[dict[str, Any]]:
+    """
+    Retorna o histórico de pagamentos de trabalhadores feitos em uma safra.
+    """
+    conn = obter_conexao()
+    try:
+        with conn.cursor() as cursor:
+            filtro_data = ""
+            params: list[Any] = [safra_id]
+            if data_inicio and data_fim:
+                filtro_data = " AND p.data >= %s AND p.data <= %s"
+                params.extend([data_inicio, data_fim])
+            params.append(limite)
+
+            query = f"""
+                SELECT p.id, t.nome, p.valor, p.data, t.id
+                FROM pagamentos_trabalhadores p
+                INNER JOIN trabalhadores t ON p.trabalhador_id = t.id
+                WHERE p.safra_id = %s {filtro_data}
+                ORDER BY p.data DESC, p.id DESC
+                LIMIT %s;
+            """
+            cursor.execute(query, tuple(params))
+            linhas = cursor.fetchall()
+
+            return [
+                {
+                    "id": l[0],
+                    "trabalhador_nome": l[1],
+                    "valor": float(l[2]),
+                    "data": l[3],
+                    "trabalhador_id": l[4],
+                }
+                for l in linhas
+            ]
     finally:
         conn.close()

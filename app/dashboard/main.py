@@ -9,10 +9,16 @@ import streamlit as st
 from app.servicos.calculo_financeiro import obter_resumo_financeiro_safra
 from app.servicos.calculo_sacas import obter_resumo_sacas_safra
 from app.servicos.dados import (
+    cadastrar_trabalhador,
     criar_safra_rapida,
     listar_safras_ativas,
+    listar_trabalhadores,
     listar_ultimas_cargas,
+    listar_ultimos_custos,
+    listar_ultimos_pagamentos,
     salvar_carga,
+    salvar_custo,
+    salvar_pagamento_trabalhador,
 )
 
 # -----------------------------------------------------------------------------
@@ -564,7 +570,7 @@ elif menu == "💰 'Meu Bolso' (Divisão do Dinheiro)":
             st.error(f"Erro ao carregar dados financeiros da safra: {e}")
 
 # =============================================================================
-# TELA 3: TRABALHADORES & DIÁRIAS (Próxima Etapa)
+# TELA 3: TRABALHADORES & DIÁRIAS (Controle de Mão de Obra)
 # =============================================================================
 elif menu == "👷 Trabalhadores & Diárias":
     st.markdown(
@@ -574,27 +580,129 @@ elif menu == "👷 Trabalhadores & Diárias":
                 👷 Trabalhadores & Diárias
             </h1>
             <p style="color: #94A3B8; margin: 4px 0 0 0; font-size: 0.95rem;">
-                Controle de presença, diárias, apanhadores e pagamentos.
-            </p>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
-    st.markdown(
-        """
-        <div class="agro-card" style="text-align: center; padding: 2.5rem;">
-            <span style="font-size: 3rem;">🚜</span>
-            <h2 style="color: #34D399; margin: 0.8rem 0 0.3rem 0;">Tela em Construção</h2>
-            <p style="color: #94A3B8; max-width: 500px; margin: 0 auto;">
-                Em breve você poderá cadastrar os trabalhadores, lançar as diárias trabalhadas e dar baixa nos pagamentos com 1 clique!
+                Controle de presença, diárias trabalhadas e acerto de pagamentos da equipe.
             </p>
         </div>
         """,
         unsafe_allow_html=True,
     )
 
+    if not safra_selecionada:
+        st.info("👈 Por favor, selecione uma safra na barra lateral.")
+    else:
+        try:
+            trabalhadores = listar_trabalhadores()
+        except Exception as e:
+            st.error(f"Erro ao carregar lista de trabalhadores: {e}")
+            trabalhadores = []
+
+        col_lancamento, col_resumo = st.columns([1.1, 1], gap="large")
+
+        with col_lancamento:
+            with st.container(border=True):
+                st.markdown("<h3 style='color: #34D399; margin-top: 0; font-size: 1.2rem;'>📝 Lançar Pagamento de Diária</h3>", unsafe_allow_html=True)
+
+                opcoes_trab = {t["nome"]: t["id"] for t in trabalhadores}
+
+                if opcoes_trab:
+                    nome_escolhido = st.selectbox("👷 Escolha o Trabalhador:", options=list(opcoes_trab.keys()))
+                    trab_id = opcoes_trab[nome_escolhido]
+                else:
+                    st.warning("Nenhum trabalhador cadastrado ainda.")
+                    trab_id = None
+                    nome_escolhido = ""
+
+                with st.expander("➕ Cadastrar Novo Trabalhador no Sistema"):
+                    novo_nome = st.text_input("Nome do Trabalhador (ex: Zé da Roça, João, Maria):")
+                    if st.button("Salvar Novo Trabalhador"):
+                        if novo_nome.strip():
+                            cadastrar_trabalhador(novo_nome.strip())
+                            st.success(f"Trabalhador '{novo_nome.strip()}' cadastrado com sucesso!")
+                            st.rerun()
+
+                data_pgto = st.date_input("📅 Data do Pagamento / Acerto:", value=date.today())
+
+                qtd_diarias = st.number_input(
+                    "📆 Quantidade de Diárias Trabalhadas:",
+                    min_value=1,
+                    max_value=100,
+                    value=1,
+                    step=1,
+                    help="Quantos dias essa pessoa trabalhou",
+                )
+
+                valor_diaria = st.number_input(
+                    "💵 Valor Combinado por Diária (R$):",
+                    min_value=1.0,
+                    max_value=2000.0,
+                    value=80.0,
+                    step=5.0,
+                    help="Preço acordado pelo dia de trabalho",
+                )
+
+                st.markdown("<br>", unsafe_allow_html=True)
+                btn_salvar_pgto = st.button("💾 Registrar Pagamento de Diária", type="primary", disabled=(trab_id is None))
+
+        with col_resumo:
+            total_pgto_calculado = qtd_diarias * valor_diaria
+
+            st.markdown(
+                f"""
+                <div class="agro-card-gold">
+                    <span class="agro-badge badge-ouro">⚡ TOTAL DO ACERTO</span>
+                    <h1 style="color: #FBBF24; margin: 0.6rem 0; font-size: 2.8rem; font-weight: 800;">
+                        R$ {total_pgto_calculado:,.2f}
+                    </h1>
+                    <div style="background: rgba(0,0,0,0.25); border-radius: 10px; padding: 0.6rem; display: inline-block; margin-top: 0.3rem;">
+                        <span style="color: #CBD5E1; font-size: 1.05rem;">
+                            <strong>{qtd_diarias}</strong> diárias × <strong>R$ {valor_diaria:,.2f}</strong>/dia
+                        </span>
+                    </div>
+                    <p style="margin: 0.8rem 0 0 0; color: #94A3B8; font-size: 0.88rem;">
+                        Este valor é descontado automaticamente da receita da safra na aba "Meu Bolso".
+                    </p>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
+
+        if btn_salvar_pgto and trab_id:
+            try:
+                pgto_id = salvar_pagamento_trabalhador(
+                    trabalhador_id=trab_id,
+                    safra_id=safra_selecionada["id"],
+                    data_pagamento=data_pgto,
+                    valor=total_pgto_calculado,
+                )
+                st.success(f"✅ Pagamento #{pgto_id} de R$ {total_pgto_calculado:,.2f} registrado com sucesso para {nome_escolhido}!")
+                st.balloons()
+            except Exception as e:
+                st.error(f"Erro ao salvar pagamento: {e}")
+
+        st.markdown("<br>", unsafe_allow_html=True)
+
+        # Histórico de pagamentos
+        st.markdown("<h3 style='color: #F8FAFC; margin: 0 0 0.5rem 0; font-size: 1.25rem;'>📋 Histórico de Pagamentos de Mão de Obra Desta Safra</h3>", unsafe_allow_html=True)
+        try:
+            pagamentos = listar_ultimos_pagamentos(safra_selecionada["id"])
+            if pagamentos:
+                dados_pgto = [
+                    {
+                        "ID #": f"#{p['id']}",
+                        "Data": p["data"].strftime("%d/%m/%Y") if hasattr(p["data"], "strftime") else str(p["data"]),
+                        "Trabalhador": p["trabalhador_nome"],
+                        "Valor Pago": f"R$ {p['valor']:,.2f}",
+                    }
+                    for p in pagamentos
+                ]
+                st.dataframe(dados_pgto, use_container_width=True)
+            else:
+                st.info("Nenhum pagamento registrado nesta safra ainda.")
+        except Exception as e:
+            st.error(f"Erro ao buscar histórico de pagamentos: {e}")
+
 # =============================================================================
-# TELA 4: CUSTOS & INSUMOS (Próxima Etapa)
+# TELA 4: CUSTOS & INSUMOS (Energia do Moedor, Embalagens, etc.)
 # =============================================================================
 elif menu == "💸 Custos & Insumos":
     st.markdown(
@@ -604,21 +712,114 @@ elif menu == "💸 Custos & Insumos":
                 💸 Custos & Insumos da Lavoura
             </h1>
             <p style="color: #94A3B8; margin: 4px 0 0 0; font-size: 0.95rem;">
-                Anotação rápida de despesas: diesel, adubo, sacaria, frete e peças.
+                Anotação rápida de despesas: energia do moedor, embalagens/sacaria, óleo diesel e manutenção.
             </p>
         </div>
         """,
         unsafe_allow_html=True,
     )
-    st.markdown(
-        """
-        <div class="agro-card" style="text-align: center; padding: 2.5rem;">
-            <span style="font-size: 3rem;">⛽</span>
-            <h2 style="color: #FBBF24; margin: 0.8rem 0 0.3rem 0;">Tela em Construção</h2>
-            <p style="color: #94A3B8; max-width: 500px; margin: 0 auto;">
-                Em breve você poderá lançar gastos rápidos direto da roça pelo celular para descontar automaticamente do seu lucro.
-            </p>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
+
+    if not safra_selecionada:
+        st.info("👈 Por favor, selecione uma safra na barra lateral.")
+    else:
+        col_form_custo, col_preview_custo = st.columns([1.1, 1], gap="large")
+
+        with col_form_custo:
+            with st.container(border=True):
+                st.markdown("<h3 style='color: #34D399; margin-top: 0; font-size: 1.2rem;'>📝 Lançar Nova Despesa</h3>", unsafe_allow_html=True)
+
+                categoria = st.radio(
+                    "Tipo de Gasto:",
+                    [
+                        "⚡ Energia do Moedor",
+                        "📦 Embalagens & Sacaria",
+                        "⛽ Óleo Diesel / Combustível",
+                        "🚜 Peças & Manutenção",
+                        "📝 Outro Gasto",
+                    ],
+                    horizontal=True,
+                )
+
+                data_custo = st.date_input("📅 Data da Despesa:", value=date.today())
+
+                # Se for embalagens, oferece calculadora rápida opcional
+                if categoria == "📦 Embalagens & Sacaria":
+                    tipo_calculo = st.radio(
+                        "Forma de Lançamento:",
+                        ["🧮 Calcular por Quantidade de Sacos", "💵 Digitar Valor Total Direto"],
+                        horizontal=True,
+                    )
+                    if tipo_calculo == "🧮 Calcular por Quantidade de Sacos":
+                        qtd_embalagens = st.number_input("Quantidade de Sacos Comprados:", min_value=1, value=100, step=10)
+                        preco_unitario_saco = st.number_input("Preço de Cada Saco (R$):", min_value=0.10, value=2.50, step=0.10)
+                        valor_final_custo = qtd_embalagens * preco_unitario_saco
+                        descricao_custo = f"Embalagens ({qtd_embalagens} sacos a R$ {preco_unitario_saco:,.2f})"
+                    else:
+                        valor_final_custo = st.number_input("Valor Total Gasto com Embalagens (R$):", min_value=1.0, value=250.0, step=10.0)
+                        descricao_custo = "Embalagens & Sacaria"
+                else:
+                    valor_final_custo = st.number_input("Valor da Despesa (R$):", min_value=1.0, value=150.0, step=10.0)
+                    detalhe_extra = st.text_input("Observação / Detalhe (opcional):", placeholder="Ex: Conta de luz do moedor set/2026, correia, etc.")
+                    if detalhe_extra.strip():
+                        descricao_custo = f"{categoria} - {detalhe_extra.strip()}"
+                    else:
+                        descricao_custo = categoria
+
+                st.markdown("<br>", unsafe_allow_html=True)
+                btn_salvar_custo = st.button("💾 Salvar Esta Despesa no Sistema", type="primary")
+
+        with col_preview_custo:
+            st.markdown(
+                f"""
+                <div class="agro-card-gold">
+                    <span class="agro-badge badge-ouro">⚡ TOTAL DA DESPESA</span>
+                    <h1 style="color: #FBBF24; margin: 0.6rem 0; font-size: 2.8rem; font-weight: 800;">
+                        R$ {valor_final_custo:,.2f}
+                    </h1>
+                    <div style="background: rgba(0,0,0,0.25); border-radius: 10px; padding: 0.6rem; display: inline-block; margin-top: 0.3rem;">
+                        <span style="color: #CBD5E1; font-size: 1rem;">
+                            <strong>{descricao_custo}</strong>
+                        </span>
+                    </div>
+                    <p style="margin: 0.8rem 0 0 0; color: #94A3B8; font-size: 0.88rem;">
+                        Esse gasto será abatido diretamente na tela "Meu Bolso" do faturamento da safra.
+                    </p>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
+
+        if btn_salvar_custo:
+            try:
+                custo_id = salvar_custo(
+                    safra_id=safra_selecionada["id"],
+                    descricao=descricao_custo,
+                    valor=valor_final_custo,
+                    data_custo=data_custo,
+                )
+                st.success(f"✅ Despesa #{custo_id} de R$ {valor_final_custo:,.2f} ({descricao_custo}) registrada com sucesso!")
+                st.balloons()
+            except Exception as e:
+                st.error(f"Erro ao salvar despesa: {e}")
+
+        st.markdown("<br>", unsafe_allow_html=True)
+
+        # Histórico de custos
+        st.markdown("<h3 style='color: #F8FAFC; margin: 0 0 0.5rem 0; font-size: 1.25rem;'>📋 Histórico de Gastos Desta Safra</h3>", unsafe_allow_html=True)
+        try:
+            custos = listar_ultimos_custos(safra_selecionada["id"])
+            if custos:
+                dados_custos = [
+                    {
+                        "ID #": f"#{c['id']}",
+                        "Data": c["data"].strftime("%d/%m/%Y") if hasattr(c["data"], "strftime") else str(c["data"]),
+                        "Descrição do Gasto": c["descricao"],
+                        "Valor": f"R$ {c['valor']:,.2f}",
+                    }
+                    for c in custos
+                ]
+                st.dataframe(dados_custos, use_container_width=True)
+            else:
+                st.info("Nenhuma despesa registrada nesta safra ainda.")
+        except Exception as e:
+            st.error(f"Erro ao buscar despesas: {e}")
