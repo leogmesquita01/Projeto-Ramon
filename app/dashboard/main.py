@@ -65,22 +65,97 @@ st.markdown(
         padding-bottom: 3rem !important;
     }
 
-    /* Ocultar completamente todo o cabeçalho superior, menus e barras */
-    header, [data-testid="stHeader"] {
-        display: none !important;
-        visibility: hidden !important;
-        height: 0 !important;
+    /* Cabeçalho transparente e não intrusivo (mantém o botão de reabrir a barra lateral acessível) */
+    header[data-testid="stHeader"], [data-testid="stHeader"] {
+        background: transparent !important;
+        pointer-events: none;
     }
 
-    /* Ocultar menu hambúrguer, rodapé, barra de ferramentas e decorações */
+    [data-testid="stToolbar"] {
+        background: transparent !important;
+    }
+
+    /* Ocultar elementos desnecessários (menu padrão, decorações, deploy e rodapé) */
     #MainMenu, 
     [data-testid="stMainMenu"], 
     footer, 
     [data-testid="stDecoration"], 
-    [data-testid="stToolbar"], 
-    [data-testid="stStatusWidget"] {
+    [data-testid="stStatusWidget"],
+    .stDeployButton,
+    [data-testid="stAppDeployButton"],
+    [data-testid="stToolbarActions"] {
         display: none !important;
         visibility: hidden !important;
+    }
+
+    /* Botão de abrir/expandir a barra lateral quando recolhida (visível e destacado no tema do app) */
+    [data-testid="stExpandSidebarButton"],
+    [data-testid="stSidebarCollapsedControl"],
+    header[data-testid="stHeader"] button {
+        display: inline-flex !important;
+        visibility: visible !important;
+        pointer-events: auto !important;
+    }
+
+    [data-testid="stExpandSidebarButton"],
+    [data-testid="stSidebarCollapsedControl"] {
+        background-color: #152420 !important;
+        border: 2px solid #10B981 !important;
+        border-radius: 12px !important;
+        color: #10B981 !important;
+        padding: 6px 14px !important;
+        margin-top: 10px !important;
+        margin-left: 14px !important;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6), 0 0 12px rgba(16, 185, 129, 0.3) !important;
+        transition: all 0.25s ease !important;
+        cursor: pointer !important;
+        align-items: center !important;
+    }
+
+    [data-testid="stExpandSidebarButton"]::after,
+    [data-testid="stSidebarCollapsedControl"]::after {
+        content: " Abrir Menu";
+        font-size: 0.9rem !important;
+        font-weight: 700 !important;
+        color: #10B981 !important;
+        margin-left: 6px !important;
+        font-family: 'Plus Jakarta Sans', sans-serif !important;
+    }
+
+    [data-testid="stExpandSidebarButton"]:hover::after,
+    [data-testid="stSidebarCollapsedControl"]:hover::after {
+        color: #FFFFFF !important;
+    }
+
+    [data-testid="stExpandSidebarButton"]:hover,
+    [data-testid="stSidebarCollapsedControl"]:hover {
+        background-color: #10B981 !important;
+        border-color: #34D399 !important;
+        transform: scale(1.04);
+        box-shadow: 0 6px 25px rgba(16, 185, 129, 0.45) !important;
+    }
+
+    [data-testid="stExpandSidebarButton"] svg,
+    [data-testid="stExpandSidebarButton"] span,
+    [data-testid="stSidebarCollapsedControl"] svg,
+    [data-testid="stSidebarCollapsedControl"] span {
+        color: #10B981 !important;
+        fill: #10B981 !important;
+    }
+
+    [data-testid="stExpandSidebarButton"]:hover svg,
+    [data-testid="stExpandSidebarButton"]:hover span,
+    [data-testid="stSidebarCollapsedControl"]:hover svg,
+    [data-testid="stSidebarCollapsedControl"]:hover span {
+        color: #FFFFFF !important;
+        fill: #FFFFFF !important;
+    }
+
+    /* Desativar e ocultar completamente o botão de recuar/fechar a barra lateral */
+    [data-testid="stSidebarCollapseButton"] {
+        display: none !important;
+        visibility: hidden !important;
+        pointer-events: none !important;
     }
 
     /* Cartão base estilo container escuro sofisticado */
