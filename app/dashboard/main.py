@@ -277,7 +277,7 @@ with st.sidebar:
     menu = st.radio(
         "Ir para a tela:",
         [
-            "💰 'Meu Bolso' (Divisão do Dinheiro)",
+            "💰 Meu Bolso (Divisão do Dinheiro)",
             "🚛 Carga do Caminhão",
             "👷 Trabalhadores & Diárias",
             "💸 Custos & Insumos",
@@ -711,7 +711,7 @@ elif menu == "🚛 Carga do Caminhão":
                         </span>
                     </div>
                     <p style="margin: 0.8rem 0 0 0; color: #94A3B8; font-size: 0.88rem;">
-                        Valor total a receber do comprador. Entra automaticamente no somatório da tela "Meu Bolso".
+                        Valor total a receber do comprador. Entra automaticamente no somatório da tela Meu Bolso.
                     </p>
                 </div>
                 """,
@@ -858,7 +858,7 @@ elif menu == "👷 Trabalhadores & Diárias":
                     </span>
                 </div>
                 <p style="margin: 0.8rem 0 0 0; color: #94A3B8; font-size: 0.88rem;">
-                    Este valor é abatido diretamente da receita na tela "Meu Bolso".
+                    Este valor é abatido diretamente da receita na tela Meu Bolso.
                 </p>
             </div>
             """,
@@ -986,7 +986,7 @@ elif menu == "💸 Custos & Insumos":
                     </span>
                 </div>
                 <p style="margin: 0.8rem 0 0 0; color: #94A3B8; font-size: 0.88rem;">
-                    Esse gasto será abatido diretamente na tela "Meu Bolso" do faturamento consolidado.
+                    Esse gasto será abatido diretamente na tela Meu Bolso do faturamento consolidado.
                 </p>
             </div>
             """,
