@@ -313,12 +313,12 @@ with st.sidebar:
 # =============================================================================
 # TELA 1: "MEU BOLSO" (DIVISÃO FINANCEIRA & RENDIMENTO TOTAL CONSOLIDADO)
 # =============================================================================
-if menu == "💰 'Meu Bolso' (Divisão do Dinheiro)":
+if menu == "💰 Meu Bolso (Divisão do Dinheiro)":
     st.markdown(
         """
         <div style="margin-bottom: 1.2rem;">
             <h1 style="color: #F8FAFC; margin: 0; font-size: 1.85rem; font-weight: 800;">
-                💰 "Meu Bolso" — Separação Clara do Dinheiro & Lucro Total
+                💰 Meu Bolso — Separação Clara do Dinheiro & Lucro Total
             </h1>
             <p style="color: #94A3B8; margin: 4px 0 0 0; font-size: 0.95rem;">
                 Veja exatamente para onde foi o dinheiro das vendas de todos os caminhões e quanto realmente sobrou limpo para você.
