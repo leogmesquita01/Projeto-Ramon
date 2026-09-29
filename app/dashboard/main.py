@@ -34,6 +34,9 @@ from app.servicos.dados import (
     salvar_custo,
     salvar_pagamento_trabalhador,
     limpar_dados_teste,
+    salvar_movimentacao_estoque,
+    listar_movimentacoes_estoque,
+    obter_resumo_estoque,
 )
 
 # -----------------------------------------------------------------------------
@@ -278,6 +281,7 @@ with st.sidebar:
         "Ir para a tela:",
         [
             "💰 Meu Bolso (Divisão do Dinheiro)",
+            "📦 Controle de Estoque",
             "🚛 Carga do Caminhão",
             "👷 Trabalhadores & Diárias",
             "💸 Custos & Insumos",
@@ -298,6 +302,7 @@ with st.sidebar:
             <span class="agro-badge badge-verde">🥔 Batata</span>
             <span class="agro-badge badge-verde">🍠 Mandioca</span>
             <span class="agro-badge badge-verde">🍉 Melancia</span>
+            <span class="agro-badge badge-verde">🚜 Silagem</span>
         </div>
         """,
         unsafe_allow_html=True,
@@ -635,6 +640,329 @@ if menu == "💰 Meu Bolso (Divisão do Dinheiro)":
 
 
 # =============================================================================
+# TELA: CONTROLE DE ESTOQUE & ARMAZENAMENTO
+# =============================================================================
+elif menu == "📦 Controle de Estoque":
+    st.markdown(
+        """
+        <div style="margin-bottom: 1.2rem;">
+            <h1 style="color: #F8FAFC; margin: 0; font-size: 1.85rem; font-weight: 800;">
+                📦 Controle de Estoque & Armazenamento
+            </h1>
+            <p style="color: #94A3B8; margin: 4px 0 0 0; font-size: 0.95rem;">
+                Acompanhe em tempo real o que foi colhido e guardado no galpão, o que já foi vendido nos caminhões e o saldo disponível para venda.
+            </p>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    try:
+        resumo_est = obter_resumo_estoque()
+    except Exception as e:
+        st.error(f"Erro ao carregar dados do estoque: {e}")
+        resumo_est = []
+
+    # Cálculos Consolidados Gerais
+    total_geral_colhido = sum(r["total_entradas"] for r in resumo_est)
+    total_geral_vendido = sum(r["total_vendidas"] for r in resumo_est)
+    total_geral_baixas = sum(r["total_baixas"] for r in resumo_est)
+    saldo_geral_disponivel = sum(r["saldo_disponivel"] for r in resumo_est)
+
+    # 4 Cartões de Métricas no Topo
+    c1, c2, c3, c4 = st.columns(4)
+    with c1:
+        st.markdown(
+            f"""
+            <div class="agro-card" style="border: 2px solid #10B981;">
+                <span style="color: #34D399; font-size: 0.85rem; font-weight: 700; text-transform: uppercase;">📦 Saldo Geral Disponível</span>
+                <h2 style="color: #F8FAFC; margin: 0.4rem 0 0 0; font-size: 1.8rem; font-weight: 800;">
+                    {int(saldo_geral_disponivel):,} sacas
+                </h2>
+                <span style="color: #A7F3D0; font-size: 0.8rem;">Prontas para comercialização</span>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+    with c2:
+        st.markdown(
+            f"""
+            <div class="agro-card">
+                <span style="color: #94A3B8; font-size: 0.85rem; font-weight: 600; text-transform: uppercase;">📥 Total Colhido / Entrada</span>
+                <h2 style="color: #60A5FA; margin: 0.4rem 0 0 0; font-size: 1.6rem; font-weight: 800;">
+                    {int(total_geral_colhido):,} sacas
+                </h2>
+                <span style="color: #64748B; font-size: 0.8rem;">Entradas registradas no galpão</span>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+    with c3:
+        st.markdown(
+            f"""
+            <div class="agro-card">
+                <span style="color: #94A3B8; font-size: 0.85rem; font-weight: 600; text-transform: uppercase;">🚛 Total Despachado / Vendas</span>
+                <h2 style="color: #FBBF24; margin: 0.4rem 0 0 0; font-size: 1.6rem; font-weight: 800;">
+                    {int(total_geral_vendido):,} sacas
+                </h2>
+                <span style="color: #64748B; font-size: 0.8rem;">Saídas via caminhões de venda</span>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+    with c4:
+        st.markdown(
+            f"""
+            <div class="agro-card">
+                <span style="color: #94A3B8; font-size: 0.85rem; font-weight: 600; text-transform: uppercase;">⚠️ Perdas / Consumo Próprio</span>
+                <h2 style="color: #F87171; margin: 0.4rem 0 0 0; font-size: 1.6rem; font-weight: 800;">
+                    {int(total_geral_baixas):,} sacas
+                </h2>
+                <span style="color: #64748B; font-size: 0.8rem;">Descartes e uso interno</span>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+    st.markdown("<br>", unsafe_allow_html=True)
+
+    # VISÃO POR CULTURA EM CARDS DINÂMICOS
+    st.markdown(
+        """
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.6rem;">
+            <h3 style="color: #F8FAFC; margin: 0; font-size: 1.25rem;">
+                🌾 Saldo em Estoque por Cultura
+            </h3>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    if resumo_est:
+        cols_grid = st.columns(3)
+        for i, item in enumerate(resumo_est):
+            with cols_grid[i % 3]:
+                saldo = int(item["saldo_disponivel"])
+                colhidas = int(item["total_entradas"])
+                vendidas = int(item["total_vendidas"])
+                baixas = int(item["total_baixas"])
+
+                # Cor e badge do status
+                if saldo > 0:
+                    badge_class = "badge-verde"
+                    status_txt = f"🟢 {saldo} sacas disponíveis"
+                    borda = "rgba(16, 185, 129, 0.4)"
+                elif saldo == 0 and colhidas == 0:
+                    badge_class = "badge-ouro"
+                    status_txt = "⚪ Sem registro de colheita"
+                    borda = "rgba(148, 163, 184, 0.2)"
+                elif saldo == 0:
+                    badge_class = "badge-ouro"
+                    status_txt = "🟡 Estoque esgotado (100% vendido)"
+                    borda = "rgba(245, 158, 11, 0.4)"
+                else:
+                    badge_class = "badge-ouro"
+                    status_txt = f"⚠️ Vendas superam colheitas ({abs(saldo)} sacas)"
+                    borda = "rgba(239, 68, 68, 0.4)"
+
+                st.markdown(
+                    f"""
+                    <div class="agro-card" style="border: 1.5px solid {borda}; padding: 1.2rem;">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <span class="agro-badge {badge_class}" style="font-size: 0.85rem;">
+                                {item['icone']} {item['cultura_nome']}
+                            </span>
+                            <span style="color: #CBD5E1; font-size: 0.82rem; font-weight: 700;">
+                                {status_txt}
+                            </span>
+                        </div>
+                        <h2 style="color: #F8FAFC; margin: 0.8rem 0 0.2rem 0; font-size: 1.7rem; font-weight: 800;">
+                            {saldo} <span style="font-size: 0.95rem; font-weight: 500; color: #94A3B8;">sacas em mãos</span>
+                        </h2>
+                        <div style="background: rgba(0,0,0,0.25); border-radius: 8px; padding: 0.5rem 0.7rem; margin-top: 0.6rem; font-size: 0.8rem; color: #94A3B8;">
+                            📥 <strong>{colhidas}</strong> colhidas &nbsp;|&nbsp; 🚛 <strong>{vendidas}</strong> vendidas &nbsp;|&nbsp; ⚠️ <strong>{baixas}</strong> perdas
+                        </div>
+                    </div>
+                    """,
+                    unsafe_allow_html=True,
+                )
+
+    st.markdown("<br>", unsafe_allow_html=True)
+
+    # FORMULÁRIOS DE LANÇAMENTO
+    col_entrada, col_ajuste = st.columns([1.1, 1], gap="large")
+
+    with col_entrada:
+        with st.container(border=True):
+            st.markdown("<h3 style='color: #34D399; margin-top: 0; font-size: 1.2rem;'>📥 Registrar Colheita / Entrada no Galpão</h3>", unsafe_allow_html=True)
+            
+            cultura_entrada_rotulo = st.selectbox(
+                "🌾 Produto / Cultura Colhida:",
+                options=list(opcoes_safras.keys()),
+                key="sel_est_entrada",
+                help="Selecione qual produto está entrando no estoque",
+            )
+            safra_entrada = opcoes_safras[cultura_entrada_rotulo]
+
+            col_data_e, col_qtd_e = st.columns(2)
+            with col_data_e:
+                data_entrada = st.date_input(
+                    "📅 Data da Colheita / Entrada:",
+                    value=date.today(),
+                    key="data_est_entrada",
+                )
+            with col_qtd_e:
+                qtd_entrada = st.number_input(
+                    "📦 Quantidade de Sacas:",
+                    min_value=1,
+                    max_value=100000,
+                    value=50,
+                    step=1,
+                    key="qtd_est_entrada",
+                )
+
+            local_armazenamento = st.selectbox(
+                "📍 Local de Armazenamento:",
+                options=["Galpão Principal", "Silo 1", "Silo 2", "Tulha", "Terreiro / Secador", "Outro"],
+                key="local_est_entrada",
+            )
+
+            obs_entrada = st.text_input(
+                "📝 Observação / Talhão (Opcional):",
+                placeholder="Ex: Talhão norte, safra de inverno, saco de 60kg",
+                key="obs_est_entrada",
+            )
+
+            st.markdown("<br>", unsafe_allow_html=True)
+            btn_salvar_entrada = st.button("💾 Registrar Entrada no Estoque", type="primary", key="btn_salvar_est_entrada")
+
+            if btn_salvar_entrada:
+                try:
+                    salvar_movimentacao_estoque(
+                        safra_id=safra_entrada["id"],
+                        tipo="entrada",
+                        data_mov=data_entrada,
+                        quantidade_sacas=qtd_entrada,
+                        local_armazenamento=local_armazenamento,
+                        observacao=obs_entrada,
+                    )
+                    st.success(f"✅ Entrada de {qtd_entrada} sacas de {safra_entrada['cultura_nome']} adicionada ao estoque com sucesso!")
+                    st.rerun()
+                except Exception as err:
+                    st.error(f"Erro ao registrar entrada: {err}")
+
+    with col_ajuste:
+        with st.container(border=True):
+            st.markdown("<h3 style='color: #FBBF24; margin-top: 0; font-size: 1.2rem;'>🔻 Registrar Baixa (Perda ou Consumo)</h3>", unsafe_allow_html=True)
+            st.caption("Dê baixa em sacas avariadas, perdas por umidade ou sacas utilizadas para consumo interno.")
+
+            cultura_baixa_rotulo = st.selectbox(
+                "🌾 Produto:",
+                options=list(opcoes_safras.keys()),
+                key="sel_est_baixa",
+            )
+            safra_baixa = opcoes_safras[cultura_baixa_rotulo]
+
+            col_tipo_b, col_qtd_b = st.columns(2)
+            with col_tipo_b:
+                tipo_baixa = st.selectbox(
+                    "Tipo de Baixa:",
+                    options=["Perda / Avaria / Mofo", "Consumo Próprio / Uso Interno"],
+                    key="tipo_est_baixa",
+                )
+            with col_qtd_b:
+                qtd_baixa = st.number_input(
+                    "Quantidade de Sacas:",
+                    min_value=1,
+                    max_value=10000,
+                    value=5,
+                    step=1,
+                    key="qtd_est_baixa",
+                )
+
+            data_baixa = st.date_input(
+                "Data da Baixa:",
+                value=date.today(),
+                key="data_est_baixa",
+            )
+
+            obs_baixa = st.text_input(
+                "Motivo / Detalhes:",
+                placeholder="Ex: Sacas molhadas pela chuva, ração para criação da fazenda",
+                key="obs_est_baixa",
+            )
+
+            st.markdown("<br>", unsafe_allow_html=True)
+            btn_salvar_baixa = st.button("🔻 Registrar Baixa no Estoque", key="btn_salvar_est_baixa")
+
+            if btn_salvar_baixa:
+                try:
+                    tipo_b_db = "perda" if "Perda" in tipo_baixa else "consumo"
+                    salvar_movimentacao_estoque(
+                        safra_id=safra_baixa["id"],
+                        tipo=tipo_b_db,
+                        data_mov=data_baixa,
+                        quantidade_sacas=qtd_baixa,
+                        local_armazenamento="Baixa",
+                        observacao=obs_baixa,
+                    )
+                    st.success(f"Baixa de {qtd_baixa} sacas de {safra_baixa['cultura_nome']} registrada!")
+                    st.rerun()
+                except Exception as err:
+                    st.error(f"Erro ao registrar baixa: {err}")
+
+    # Dica visual de integração com as Cargas do Caminhão
+    st.markdown(
+        """
+        <div style="background: rgba(16, 185, 129, 0.08); border-left: 4px solid #10B981; border-radius: 8px; padding: 0.8rem 1.2rem; margin-top: 1.2rem;">
+            <span style="color: #34D399; font-weight: 700; font-size: 0.9rem;">
+                💡 Como funciona a saída por vendas:
+            </span>
+            <span style="color: #CBD5E1; font-size: 0.9rem; margin-left: 6px;">
+                Toda carga registrada na tela <strong>🚛 Carga do Caminhão</strong> dá baixa automaticamente no saldo desta tela. Não é necessário registrar a venda duas vezes!
+            </span>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    st.markdown("<br>", unsafe_allow_html=True)
+
+    # TABELA DE HISTÓRICO DE MOVIMENTAÇÕES DE ESTOQUE
+    st.markdown(
+        """
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.5rem;">
+            <h3 style="color: #F8FAFC; margin: 0; font-size: 1.25rem;">
+                📋 Histórico das Últimas Entradas e Baixas no Armazém
+            </h3>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    try:
+        movs = listar_movimentacoes_estoque(safra_id=None, limite=50)
+        if movs:
+            dados_tab_est = [
+                {
+                    "Registro #": f"#{m['id']}",
+                    "Data": m["data"].strftime("%d/%m/%Y") if hasattr(m["data"], "strftime") else str(m["data"]),
+                    "Cultura": f"{m['icone']} {m['cultura_nome']}",
+                    "Tipo de Movimento": m["tipo_rotulo"],
+                    "Quantidade": f"{int(m['quantidade_sacas'])} sacas",
+                    "Local": m["local_armazenamento"],
+                    "Observações": m["observacao"] or "-",
+                }
+                for m in movs
+            ]
+            st.dataframe(dados_tab_est, use_container_width=True)
+        else:
+            st.info("Nenhuma entrada de colheita ou baixa registrada manualmente ainda. Use o formulário acima para registrar a primeira colheita!")
+    except Exception as e:
+        st.error(f"Erro ao listar movimentações de estoque: {e}")
+
+
+# =============================================================================
 # TELA 2: CARGA DO CAMINHÃO (Calculadora e Registro Instantâneo)
 # =============================================================================
 elif menu == "🚛 Carga do Caminhão":
@@ -667,6 +995,18 @@ elif menu == "🚛 Carga do Caminhão":
                     help="Escolha qual produto comercial está sendo despachado neste caminhão",
                 )
                 safra_da_carga = opcoes_safras[produto_carga_rotulo]
+
+                try:
+                    resumo_est_prod = obter_resumo_estoque(safra_id=safra_da_carga["id"])
+                    saldo_prod = int(resumo_est_prod[0]["saldo_disponivel"]) if resumo_est_prod else 0
+                    if saldo_prod > 0:
+                        st.caption(f"📦 **Estoque disponível no galpão:** :green[{saldo_prod} sacas]")
+                    elif saldo_prod == 0:
+                        st.caption("📦 **Estoque no galpão:** :orange[0 sacas registradas]")
+                    else:
+                        st.caption(f"📦 **Estoque no galpão:** :red[{saldo_prod} sacas (vendas > colheita)]")
+                except Exception:
+                    pass
 
                 data_carga = st.date_input(
                     "📅 Data do Carregamento:",

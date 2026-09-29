@@ -13,6 +13,7 @@ CULTURAS_PADRAO = [
     "Batata",
     "Mandioca",
     "Melancia",
+    "Silagem",
 ]
 
 ICONES_CULTURAS = {
@@ -24,12 +25,13 @@ ICONES_CULTURAS = {
     "Batata": "🥔",
     "Mandioca": "🍠",
     "Melancia": "🍉",
+    "Silagem": "🚜",
 }
 
 
 def garantir_culturas_padrao() -> None:
     """
-    Garante que todas as 8 culturas comerciais padrão existam no banco
+    Garante que todas as culturas comerciais padrão existam no banco
     e tenham um registro ativo de controle para vendas.
     """
     conn = obter_conexao()
@@ -440,14 +442,183 @@ def listar_ultimos_pagamentos(
         conn.close()
 
 
-def limpar_dados_teste() -> dict[str, int]:
+# -----------------------------------------------------------------------------
+# OPERAÇÕES DE CONTROLE DE ESTOQUE (Entradas de Colheita, Armazém & Baixas)
+# -----------------------------------------------------------------------------
+def salvar_movimentacao_estoque(
+    safra_id: int,
+    tipo: str,
+    data_mov: date,
+    quantidade_sacas: float,
+    local_armazenamento: str = "",
+    observacao: str = "",
+) -> int:
     """
-    Remove todos os registros de teste de cargas, pagamentos de trabalhadores,
-    custos, trabalhadores e precos avulsos, mantendo intactas as culturas e safras.
+    Registra uma movimentação no estoque (ex: 'entrada' de colheita, 'perda', 'consumo').
     """
     conn = obter_conexao()
     try:
         with conn.cursor() as cursor:
+            cursor.execute(
+                """
+                INSERT INTO estoque_movimentacoes (safra_id, tipo, data, quantidade_sacas, local_armazenamento, observacao)
+                VALUES (%s, %s, %s, %s, %s, %s)
+                RETURNING id;
+                """,
+                (safra_id, tipo, data_mov, quantidade_sacas, local_armazenamento.strip(), observacao.strip()),
+            )
+            mov_id = cursor.fetchone()[0]
+            conn.commit()
+            return mov_id
+    finally:
+        conn.close()
+
+
+def listar_movimentacoes_estoque(
+    safra_id: Optional[int] = None,
+    tipo: Optional[str] = None,
+    limite: int = 50,
+    data_inicio: Optional[date] = None,
+    data_fim: Optional[date] = None,
+) -> list[dict[str, Any]]:
+    """
+    Retorna o histórico de movimentações manuais de estoque (entradas de colheita, perdas, etc).
+    """
+    conn = obter_conexao()
+    try:
+        with conn.cursor() as cursor:
+            filtro = "WHERE 1=1"
+            params: list[Any] = []
+            if safra_id is not None:
+                filtro += " AND em.safra_id = %s"
+                params.append(safra_id)
+            if tipo:
+                filtro += " AND em.tipo = %s"
+                params.append(tipo)
+            if data_inicio and data_fim:
+                filtro += " AND em.data >= %s AND em.data <= %s"
+                params.extend([data_inicio, data_fim])
+            params.append(limite)
+
+            query = f"""
+                SELECT 
+                    em.id,
+                    em.safra_id,
+                    em.tipo,
+                    em.data,
+                    em.quantidade_sacas,
+                    em.local_armazenamento,
+                    em.observacao,
+                    cul.nome AS cultura_nome
+                FROM estoque_movimentacoes em
+                INNER JOIN safras s ON em.safra_id = s.id
+                INNER JOIN culturas cul ON s.cultura_id = cul.id
+                {filtro}
+                ORDER BY em.data DESC, em.id DESC
+                LIMIT %s;
+            """
+            cursor.execute(query, tuple(params))
+            linhas = cursor.fetchall()
+
+            tipo_rotulos = {
+                "entrada": "📥 Entrada (Colheita)",
+                "perda": "⚠️ Perda / Avaria",
+                "consumo": "🍽️ Consumo Próprio",
+            }
+
+            return [
+                {
+                    "id": l[0],
+                    "safra_id": l[1],
+                    "tipo": l[2],
+                    "tipo_rotulo": tipo_rotulos.get(l[2], l[2]),
+                    "data": l[3],
+                    "quantidade_sacas": float(l[4]),
+                    "local_armazenamento": l[5] or "Galpão Principal",
+                    "observacao": l[6] or "",
+                    "cultura_nome": l[7],
+                    "icone": ICONES_CULTURAS.get(l[7], "🌾"),
+                }
+                for l in linhas
+            ]
+    finally:
+        conn.close()
+
+
+def obter_resumo_estoque(safra_id: Optional[int] = None) -> list[dict[str, Any]]:
+    """
+    Calcula o saldo de estoque atual por cultura:
+    Saldo = (Total Entradas de Colheita) - (Total Cargas Vendidas) - (Total Perdas/Consumo)
+    """
+    conn = obter_conexao()
+    try:
+        with conn.cursor() as cursor:
+            filtro_safra = ""
+            params: list[Any] = []
+            if safra_id is not None:
+                filtro_safra = "WHERE s.id = %s"
+                params.append(safra_id)
+
+            query = f"""
+                SELECT 
+                    s.id AS safra_id,
+                    cul.id AS cultura_id,
+                    cul.nome AS cultura_nome,
+                    COALESCE((
+                        SELECT SUM(em.quantidade_sacas) 
+                        FROM estoque_movimentacoes em 
+                        WHERE em.safra_id = s.id AND em.tipo = 'entrada'
+                    ), 0) AS total_entradas,
+                    COALESCE((
+                        SELECT SUM(car.quantidade_sacas) 
+                        FROM cargas car 
+                        WHERE car.safra_id = s.id
+                    ), 0) AS total_vendidas,
+                    COALESCE((
+                        SELECT SUM(em.quantidade_sacas) 
+                        FROM estoque_movimentacoes em 
+                        WHERE em.safra_id = s.id AND em.tipo IN ('perda', 'consumo')
+                    ), 0) AS total_baixas
+                FROM safras s
+                INNER JOIN culturas cul ON s.cultura_id = cul.id
+                {filtro_safra}
+                ORDER BY cul.nome ASC;
+            """
+            cursor.execute(query, tuple(params))
+            linhas = cursor.fetchall()
+
+            resumo = []
+            for l in linhas:
+                sid, cid, nome, entradas, vendidas, baixas = l
+                entradas = float(entradas)
+                vendidas = float(vendidas)
+                baixas = float(baixas)
+                saldo = entradas - vendidas - baixas
+                resumo.append({
+                    "safra_id": sid,
+                    "cultura_id": cid,
+                    "cultura_nome": nome,
+                    "icone": ICONES_CULTURAS.get(nome, "🌾"),
+                    "total_entradas": entradas,
+                    "total_vendidas": vendidas,
+                    "total_baixas": baixas,
+                    "saldo_disponivel": saldo,
+                })
+            return resumo
+    finally:
+        conn.close()
+
+
+def limpar_dados_teste() -> dict[str, int]:
+    """
+    Remove todos os registros de teste de cargas, pagamentos de trabalhadores,
+    custos, estoque, trabalhadores e precos avulsos, mantendo intactas as culturas e safras.
+    """
+    conn = obter_conexao()
+    try:
+        with conn.cursor() as cursor:
+            cursor.execute("DELETE FROM estoque_movimentacoes;")
+            estoque_del = cursor.rowcount
             cursor.execute("DELETE FROM cargas;")
             cargas_del = cursor.rowcount
             cursor.execute("DELETE FROM pagamentos_trabalhadores;")
@@ -460,6 +631,7 @@ def limpar_dados_teste() -> dict[str, int]:
             precos_del = cursor.rowcount
             conn.commit()
             return {
+                "estoque": estoque_del,
                 "cargas": cargas_del,
                 "pagamentos": pagamentos_del,
                 "custos": custos_del,
@@ -468,4 +640,5 @@ def limpar_dados_teste() -> dict[str, int]:
             }
     finally:
         conn.close()
+
 

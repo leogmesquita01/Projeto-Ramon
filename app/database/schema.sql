@@ -55,3 +55,15 @@ CREATE TABLE pagamentos_trabalhadores (
     FOREIGN KEY (trabalhador_id) REFERENCES trabalhadores(id),
     FOREIGN KEY (safra_id) REFERENCES safras(id)
 );
+
+CREATE TABLE estoque_movimentacoes (
+    id SERIAL PRIMARY KEY,
+    safra_id INTEGER NOT NULL,
+    tipo TEXT NOT NULL DEFAULT 'entrada',
+    data DATE NOT NULL,
+    quantidade_sacas NUMERIC NOT NULL,
+    local_armazenamento TEXT,
+    observacao TEXT,
+    criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (safra_id) REFERENCES safras(id)
+);
