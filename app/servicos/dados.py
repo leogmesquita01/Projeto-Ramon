@@ -286,32 +286,60 @@ def listar_ultimos_custos(
     data_fim: Optional[date] = None,
 ) -> list[dict[str, Any]]:
     """
-    Retorna os custos lançados, com filtro opcional por cultura e por período.
+    Retorna os custos lançados e também as compras de caminhões para revenda,
+    com filtro opcional por cultura e por período.
     Se safra_id for None, traz todos os custos consolidados.
     """
     conn = obter_conexao()
     try:
         with conn.cursor() as cursor:
-            filtro = "WHERE 1=1"
-            params: list[Any] = []
+            filtro_c = "WHERE 1=1"
+            filtro_car = "WHERE car.tipo_operacao = 'compra'"
+            params_c: list[Any] = []
+            params_car: list[Any] = []
+
             if safra_id is not None:
-                filtro += " AND c.safra_id = %s"
-                params.append(safra_id)
+                filtro_c += " AND c.safra_id = %s"
+                params_c.append(safra_id)
+                filtro_car += " AND car.safra_id = %s"
+                params_car.append(safra_id)
             if data_inicio and data_fim:
-                filtro += " AND c.data >= %s AND c.data <= %s"
-                params.extend([data_inicio, data_fim])
-            params.append(limite)
+                filtro_c += " AND c.data >= %s AND c.data <= %s"
+                params_c.extend([data_inicio, data_fim])
+                filtro_car += " AND car.data >= %s AND car.data <= %s"
+                params_car.extend([data_inicio, data_fim])
 
             query = f"""
-                SELECT c.id, c.descricao, c.valor, c.data, cul.nome
+                SELECT 
+                    c.id, 
+                    c.descricao, 
+                    c.valor, 
+                    c.data, 
+                    cul.nome
                 FROM custos c
                 LEFT JOIN safras s ON c.safra_id = s.id
                 LEFT JOIN culturas cul ON s.cultura_id = cul.id
-                {filtro}
-                ORDER BY c.data DESC, c.id DESC
+                {filtro_c}
+
+                UNION ALL
+
+                SELECT 
+                    car.id, 
+                    CONCAT('🚚 Compra de Caminhão (', CAST(car.quantidade_sacas AS INTEGER), ' sacas p/ revenda)'), 
+                    COALESCE(car.valor_total, car.quantidade_sacas * COALESCE(p.valor_por_saca, 0)), 
+                    car.data, 
+                    cul.nome
+                FROM cargas car
+                LEFT JOIN safras s ON car.safra_id = s.id
+                LEFT JOIN culturas cul ON s.cultura_id = cul.id
+                LEFT JOIN precos p ON car.preco_id = p.id
+                {filtro_car}
+
+                ORDER BY data DESC, id DESC
                 LIMIT %s;
             """
-            cursor.execute(query, tuple(params))
+            params_total = params_c + params_car + [limite]
+            cursor.execute(query, tuple(params_total))
             linhas = cursor.fetchall()
 
             return [
