@@ -119,9 +119,10 @@ def salvar_carga(
     data_carga: date,
     quantidade_sacas: int,
     valor_por_saca: float,
+    tipo_operacao: str = "venda",
 ) -> int:
     """
-    Registra uma nova carga colhida/vendida, registrando também o preço unitário.
+    Registra uma nova carga (venda ou compra para revenda), registrando também o preço unitário.
     """
     conn = obter_conexao()
     try:
@@ -140,11 +141,11 @@ def salvar_carga(
 
             cursor.execute(
                 """
-                INSERT INTO cargas (safra_id, data, quantidade_sacas, preco_id, valor_total)
-                VALUES (%s, %s, %s, %s, %s)
+                INSERT INTO cargas (safra_id, data, quantidade_sacas, preco_id, valor_total, tipo_operacao)
+                VALUES (%s, %s, %s, %s, %s, %s)
                 RETURNING id;
                 """,
-                (safra_id, data_carga, quantidade_sacas, preco_id, valor_total),
+                (safra_id, data_carga, quantidade_sacas, preco_id, valor_total, tipo_operacao),
             )
             carga_id = cursor.fetchone()[0]
 
@@ -159,9 +160,10 @@ def listar_ultimas_cargas(
     limite: int = 50,
     data_inicio: Optional[date] = None,
     data_fim: Optional[date] = None,
+    tipo_operacao: Optional[str] = None,
 ) -> list[dict[str, Any]]:
     """
-    Retorna as cargas cadastradas, com filtro opcional por cultura e por período.
+    Retorna as cargas cadastradas, com filtro opcional por cultura, tipo de operação e por período.
     Se safra_id for None, traz as cargas de todas as culturas.
     """
     conn = obter_conexao()
@@ -172,6 +174,9 @@ def listar_ultimas_cargas(
             if safra_id is not None:
                 filtro += " AND car.safra_id = %s"
                 params.append(safra_id)
+            if tipo_operacao is not None:
+                filtro += " AND COALESCE(car.tipo_operacao, 'venda') = %s"
+                params.append(tipo_operacao)
             if data_inicio and data_fim:
                 filtro += " AND car.data >= %s AND car.data <= %s"
                 params.extend([data_inicio, data_fim])
@@ -184,7 +189,8 @@ def listar_ultimas_cargas(
                     car.quantidade_sacas,
                     COALESCE(p.valor_por_saca, 0) AS valor_por_saca,
                     COALESCE(car.valor_total, car.quantidade_sacas * COALESCE(p.valor_por_saca, 0)) AS valor_total,
-                    cul.nome AS cultura_nome
+                    cul.nome AS cultura_nome,
+                    COALESCE(car.tipo_operacao, 'venda') AS tipo_operacao
                 FROM cargas car
                 INNER JOIN safras s ON car.safra_id = s.id
                 INNER JOIN culturas cul ON s.cultura_id = cul.id
@@ -205,6 +211,8 @@ def listar_ultimas_cargas(
                     "valor_total": float(linha[4]),
                     "cultura_nome": linha[5],
                     "icone": ICONES_CULTURAS.get(linha[5], "🌾"),
+                    "tipo_operacao": linha[6],
+                    "tipo_rotulo": "🟢 Venda" if linha[6] == "venda" else "🔵 Compra (Revenda)",
                 }
                 for linha in linhas
             ]
@@ -572,13 +580,18 @@ def obter_resumo_estoque(safra_id: Optional[int] = None) -> list[dict[str, Any]]
                     COALESCE((
                         SELECT SUM(car.quantidade_sacas) 
                         FROM cargas car 
-                        WHERE car.safra_id = s.id
+                        WHERE car.safra_id = s.id AND COALESCE(car.tipo_operacao, 'venda') = 'venda'
                     ), 0) AS total_vendidas,
                     COALESCE((
                         SELECT SUM(em.quantidade_sacas) 
                         FROM estoque_movimentacoes em 
                         WHERE em.safra_id = s.id AND em.tipo IN ('perda', 'consumo')
-                    ), 0) AS total_baixas
+                    ), 0) AS total_baixas,
+                    COALESCE((
+                        SELECT SUM(car.quantidade_sacas) 
+                        FROM cargas car 
+                        WHERE car.safra_id = s.id AND car.tipo_operacao = 'compra'
+                    ), 0) AS total_compras
                 FROM safras s
                 INNER JOIN culturas cul ON s.cultura_id = cul.id
                 {filtro_safra}
@@ -589,18 +602,20 @@ def obter_resumo_estoque(safra_id: Optional[int] = None) -> list[dict[str, Any]]
 
             resumo = []
             for l in linhas:
-                sid, cid, nome, entradas, vendidas, baixas = l
+                sid, cid, nome, entradas, vendidas, baixas, compras = l
                 entradas = float(entradas)
                 vendidas = float(vendidas)
                 baixas = float(baixas)
-                # O saldo físico disponível em mãos nunca pode ser negativo
-                saldo = max(0.0, entradas - vendidas - baixas)
+                compras = float(compras)
+                # O saldo físico disponível em mãos = (Colheitas + Compras p/ Revenda) - Vendas - Baixas
+                saldo = max(0.0, (entradas + compras) - vendidas - baixas)
                 resumo.append({
                     "safra_id": sid,
                     "cultura_id": cid,
                     "cultura_nome": nome,
                     "icone": ICONES_CULTURAS.get(nome, "🌾"),
                     "total_entradas": entradas,
+                    "total_compras": compras,
                     "total_vendidas": vendidas,
                     "total_baixas": baixas,
                     "saldo_disponivel": saldo,

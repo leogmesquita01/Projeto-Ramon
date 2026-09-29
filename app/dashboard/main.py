@@ -459,6 +459,14 @@ if menu == "💰 Meu Bolso (Divisão do Dinheiro)":
             unsafe_allow_html=True,
         )
 
+        compras_revenda = resumo_fin.get("compras_revenda", 0.0)
+        total_gastos_operacionais = custos_op + compras_revenda
+        subtitulo_gastos = (
+            f"Insumos R$ {custos_op:,.0f} | Cargas p/ Revenda R$ {compras_revenda:,.0f}"
+            if compras_revenda > 0
+            else "Moedor, sacos, combustível"
+        )
+
         # Métricas em colunas com cartões estilizados
         m1, m2, m3, m4 = st.columns(4)
         with m1:
@@ -467,7 +475,7 @@ if menu == "💰 Meu Bolso (Divisão do Dinheiro)":
                 <div class="agro-card">
                     <span style="color: #94A3B8; font-size: 0.85rem; font-weight: 600; text-transform: uppercase;">💵 Total Vendido</span>
                     <h2 style="color: #F8FAFC; margin: 0.4rem 0 0 0; font-size: 1.6rem;">R$ {receita:,.2f}</h2>
-                    <span style="color: #64748B; font-size: 0.8rem;">Entrada dos caminhões</span>
+                    <span style="color: #64748B; font-size: 0.8rem;">Entrada dos caminhões vendidos</span>
                 </div>
                 """,
                 unsafe_allow_html=True,
@@ -487,9 +495,9 @@ if menu == "💰 Meu Bolso (Divisão do Dinheiro)":
             st.markdown(
                 f"""
                 <div class="agro-card">
-                    <span style="color: #94A3B8; font-size: 0.85rem; font-weight: 600; text-transform: uppercase;">⚡ Insumos & Gastos</span>
-                    <h2 style="color: #FBBF24; margin: 0.4rem 0 0 0; font-size: 1.6rem;">R$ {custos_op:,.2f}</h2>
-                    <span style="color: #64748B; font-size: 0.8rem;">Moedor, sacos, combustível</span>
+                    <span style="color: #94A3B8; font-size: 0.85rem; font-weight: 600; text-transform: uppercase;">⚡ Gastos & Aquisições</span>
+                    <h2 style="color: #FBBF24; margin: 0.4rem 0 0 0; font-size: 1.6rem;">R$ {total_gastos_operacionais:,.2f}</h2>
+                    <span style="color: #64748B; font-size: 0.8rem;">{subtitulo_gastos}</span>
                 </div>
                 """,
                 unsafe_allow_html=True,
@@ -498,9 +506,9 @@ if menu == "💰 Meu Bolso (Divisão do Dinheiro)":
             st.markdown(
                 f"""
                 <div class="agro-card">
-                    <span style="color: #94A3B8; font-size: 0.85rem; font-weight: 600; text-transform: uppercase;">🌾 Volume Entregue</span>
+                    <span style="color: #94A3B8; font-size: 0.85rem; font-weight: 600; text-transform: uppercase;">🌾 Volume Vendido</span>
                     <h2 style="color: #34D399; margin: 0.4rem 0 0 0; font-size: 1.6rem;">{total_sacas_periodo} sacas</h2>
-                    <span style="color: #64748B; font-size: 0.8rem;">{total_cargas_periodo} caminhões no período</span>
+                    <span style="color: #64748B; font-size: 0.8rem;">{total_cargas_periodo} caminhão(ões) vendidos</span>
                 </div>
                 """,
                 unsafe_allow_html=True,
@@ -549,7 +557,7 @@ if menu == "💰 Meu Bolso (Divisão do Dinheiro)":
             f"""
             <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.5rem;">
                 <h3 style="color: #F8FAFC; margin: 0; font-size: 1.25rem;">
-                    🚚 Caminhões & Cargas no Período ({total_cargas_periodo})
+                    🚚 Caminhões Negociados no Período
                 </h3>
             </div>
             """,
@@ -568,10 +576,11 @@ if menu == "💰 Meu Bolso (Divisão do Dinheiro)":
                 {
                     "Carga #": f"#{c['id']}",
                     "Data": c["data"].strftime("%d/%m/%Y") if hasattr(c["data"], "strftime") else str(c["data"]),
+                    "Operação": c.get("tipo_rotulo", "🟢 Venda"),
                     "Produto": f"{c.get('icone', '🌾')} {c.get('cultura_nome', '')}",
                     "Total de Sacas": f"{int(c['quantidade_sacas'])} sacas",
                     "Preço / Saca": f"R$ {c['valor_por_saca']:,.2f}",
-                    "Valor Bruto": f"R$ {c['valor_total']:,.2f}",
+                    "Valor Total": f"R$ {c['valor_total']:,.2f}",
                 }
                 for c in cargas_do_periodo
             ]
@@ -655,6 +664,7 @@ elif menu == "📦 Controle de Estoque":
 
     # Cálculos Consolidados Gerais
     total_geral_colhido = sum(r["total_entradas"] for r in resumo_est)
+    total_geral_compras = sum(r.get("total_compras", 0) for r in resumo_est)
     total_geral_vendido = sum(r["total_vendidas"] for r in resumo_est)
     total_geral_baixas = sum(r["total_baixas"] for r in resumo_est)
     saldo_geral_disponivel = sum(r["saldo_disponivel"] for r in resumo_est)
@@ -678,11 +688,11 @@ elif menu == "📦 Controle de Estoque":
         st.markdown(
             f"""
             <div class="agro-card">
-                <span style="color: #94A3B8; font-size: 0.85rem; font-weight: 600; text-transform: uppercase;">📥 Total Colhido / Entrada</span>
+                <span style="color: #94A3B8; font-size: 0.85rem; font-weight: 600; text-transform: uppercase;">📥 Entradas no Galpão</span>
                 <h2 style="color: #60A5FA; margin: 0.4rem 0 0 0; font-size: 1.6rem; font-weight: 800;">
-                    {int(total_geral_colhido):,} sacas
+                    {int(total_geral_colhido + total_geral_compras):,} sacas
                 </h2>
-                <span style="color: #64748B; font-size: 0.8rem;">Entradas registradas no galpão</span>
+                <span style="color: #64748B; font-size: 0.8rem;">{int(total_geral_colhido)} colhidas + {int(total_geral_compras)} compradas</span>
             </div>
             """,
             unsafe_allow_html=True,
@@ -734,6 +744,7 @@ elif menu == "📦 Controle de Estoque":
             with cols_grid[i % 3]:
                 saldo = max(0, int(item["saldo_disponivel"]))
                 colhidas = int(item["total_entradas"])
+                compras = int(item.get("total_compras", 0))
                 vendidas = int(item["total_vendidas"])
                 baixas = int(item["total_baixas"])
 
@@ -742,11 +753,11 @@ elif menu == "📦 Controle de Estoque":
                     badge_class = "badge-verde"
                     status_txt = f"🟢 {saldo} sacas disponíveis"
                     borda = "rgba(16, 185, 129, 0.4)"
-                elif colhidas == 0 and vendidas == 0:
+                elif colhidas == 0 and compras == 0 and vendidas == 0:
                     badge_class = "badge-ouro"
                     status_txt = "⚪ Sem estoque"
                     borda = "rgba(148, 163, 184, 0.2)"
-                elif colhidas == 0 and vendidas > 0:
+                elif (colhidas + compras) == 0 and vendidas > 0:
                     badge_class = "badge-ouro"
                     status_txt = "🟡 0 em estoque (venda direta)"
                     borda = "rgba(245, 158, 11, 0.3)"
@@ -770,7 +781,7 @@ elif menu == "📦 Controle de Estoque":
                             {saldo} <span style="font-size: 0.95rem; font-weight: 500; color: #94A3B8;">sacas no galpão</span>
                         </h2>
                         <div style="background: rgba(0,0,0,0.25); border-radius: 8px; padding: 0.5rem 0.7rem; margin-top: 0.6rem; font-size: 0.8rem; color: #94A3B8;">
-                            📥 <strong>{colhidas}</strong> colhidas &nbsp;|&nbsp; 🚛 <strong>{vendidas}</strong> vendidas &nbsp;|&nbsp; ⚠️ <strong>{baixas}</strong> perdas
+                            📥 <strong>{colhidas}</strong> colhidas &nbsp;|&nbsp; 🚚 <strong>{compras}</strong> compradas &nbsp;|&nbsp; 🚛 <strong>{vendidas}</strong> vendidas &nbsp;|&nbsp; ⚠️ <strong>{baixas}</strong> perdas
                         </div>
                     </div>
                     """,
@@ -979,10 +990,21 @@ elif menu == "🚛 Carga do Caminhão":
             with st.container(border=True):
                 st.markdown("<h3 style='color: #34D399; margin-top: 0; font-size: 1.2rem;'>📝 Dados da Carga</h3>", unsafe_allow_html=True)
 
+                tipo_operacao_selecionada = st.radio(
+                    "Operação do Caminhão:",
+                    ["🟢 Venda (Saída p/ Comprador)", "🔵 Compra (Aquisição p/ Revenda)"],
+                    index=0,
+                    horizontal=True,
+                    key="tipo_op_carga",
+                    help="Escolha se este caminhão é uma venda da lavoura ou uma compra de produto de terceiros para revender",
+                )
+                eh_venda = "Venda" in tipo_operacao_selecionada
+                tipo_op_db = "venda" if eh_venda else "compra"
+
                 produto_carga_rotulo = st.selectbox(
                     "🌾 Produto / Cultura Carregada:",
                     options=list(opcoes_safras.keys()),
-                    help="Escolha qual produto comercial está sendo despachado neste caminhão",
+                    help="Escolha qual produto comercial está sendo negociado neste caminhão",
                 )
                 safra_da_carga = opcoes_safras[produto_carga_rotulo]
 
@@ -999,7 +1021,7 @@ elif menu == "🚛 Carga do Caminhão":
                 data_carga = st.date_input(
                     "📅 Data do Carregamento:",
                     value=date.today(),
-                    help="Data em que o caminhão foi carregado e despachado",
+                    help="Data em que o caminhão foi carregado/negociado",
                 )
 
                 qtd_sacas = st.number_input(
@@ -1011,40 +1033,69 @@ elif menu == "🚛 Carga do Caminhão":
                     help="Número total de sacas cheias carregadas no caminhão",
                 )
 
+                label_preco = (
+                    "🏷️ Preço Combinado de Venda por Saca (R$):"
+                    if eh_venda
+                    else "🏷️ Preço Pago na Compra por Saca (R$):"
+                )
                 preco_saca = st.number_input(
-                    "🏷️ Preço Combinado por Saca (R$):",
+                    label_preco,
                     min_value=0.0,
                     max_value=5000.0,
-                    value=40.0,
+                    value=40.0 if eh_venda else 30.0,
                     step=0.50,
-                    help="Preço acordado para a venda de cada saca",
+                    help="Preço acordado por saca nesta negociação",
                 )
 
                 st.markdown("<br>", unsafe_allow_html=True)
-                btn_salvar = st.button("💾 Salvar Carga no Sistema", type="primary")
+                texto_btn = "💾 Salvar Venda da Carga" if eh_venda else "💾 Salvar Compra para Revenda"
+                btn_salvar = st.button(texto_btn, type="primary")
 
         with col_calculo:
             valor_total_calculado = qtd_sacas * preco_saca
 
-            st.markdown(
-                f"""
-                <div class="agro-card-gold">
-                    <span class="agro-badge badge-ouro">⚡ TOTAL BRUTO GERADO</span>
-                    <h1 style="color: #FBBF24; margin: 0.6rem 0; font-size: 2.8rem; font-weight: 800;">
-                        R$ {valor_total_calculado:,.2f}
-                    </h1>
-                    <div style="background: rgba(0,0,0,0.25); border-radius: 10px; padding: 0.6rem; display: inline-block; margin-top: 0.3rem;">
-                        <span style="color: #CBD5E1; font-size: 1.05rem;">
-                            <strong>{produto_carga_rotulo}</strong>: <strong>{qtd_sacas}</strong> sacas × <strong>R$ {preco_saca:,.2f}</strong>/saca
-                        </span>
+            if eh_venda:
+                st.markdown(
+                    f"""
+                    <div class="agro-card-gold">
+                        <span class="agro-badge badge-ouro">⚡ TOTAL BRUTO A RECEBER</span>
+                        <h1 style="color: #FBBF24; margin: 0.6rem 0; font-size: 2.8rem; font-weight: 800;">
+                            R$ {valor_total_calculado:,.2f}
+                        </h1>
+                        <div style="background: rgba(0,0,0,0.25); border-radius: 10px; padding: 0.6rem; display: inline-block; margin-top: 0.3rem;">
+                            <span style="color: #CBD5E1; font-size: 1.05rem;">
+                                <strong>{produto_carga_rotulo}</strong>: <strong>{qtd_sacas}</strong> sacas × <strong>R$ {preco_saca:,.2f}</strong>/saca
+                            </span>
+                        </div>
+                        <p style="margin: 0.8rem 0 0 0; color: #94A3B8; font-size: 0.88rem;">
+                            Entrada bruta da venda. Abate automaticamente do seu estoque no galpão.
+                        </p>
                     </div>
-                    <p style="margin: 0.8rem 0 0 0; color: #94A3B8; font-size: 0.88rem;">
-                        Valor total a receber do comprador. Entra automaticamente no somatório da tela Meu Bolso.
-                    </p>
-                </div>
-                """,
-                unsafe_allow_html=True,
-            )
+                    """,
+                    unsafe_allow_html=True,
+                )
+            else:
+                st.markdown(
+                    f"""
+                    <div class="agro-card" style="border: 2px solid #3B82F6; text-align: center; padding: 1.6rem;">
+                        <span class="agro-badge" style="background: rgba(59, 130, 246, 0.2); color: #60A5FA; border: 1px solid rgba(59, 130, 246, 0.4);">
+                            💸 TOTAL PAGO NA AQUISIÇÃO
+                        </span>
+                        <h1 style="color: #60A5FA; margin: 0.6rem 0; font-size: 2.8rem; font-weight: 800;">
+                            R$ {valor_total_calculado:,.2f}
+                        </h1>
+                        <div style="background: rgba(0,0,0,0.25); border-radius: 10px; padding: 0.6rem; display: inline-block; margin-top: 0.3rem;">
+                            <span style="color: #CBD5E1; font-size: 1.05rem;">
+                                <strong>{produto_carga_rotulo}</strong>: <strong>{qtd_sacas}</strong> sacas × <strong>R$ {preco_saca:,.2f}</strong>/saca
+                            </span>
+                        </div>
+                        <p style="margin: 0.8rem 0 0 0; color: #94A3B8; font-size: 0.88rem;">
+                            Custo pago pelo caminhão. Essas <strong>{qtd_sacas} sacas</strong> entram automaticamente no estoque para revenda!
+                        </p>
+                    </div>
+                    """,
+                    unsafe_allow_html=True,
+                )
 
         if btn_salvar:
             try:
@@ -1054,11 +1105,18 @@ elif menu == "🚛 Carga do Caminhão":
                     data_carga=data_carga,
                     quantidade_sacas=qtd_sacas,
                     valor_por_saca=preco_saca,
+                    tipo_operacao=tipo_op_db,
                 )
-                st.success(
-                    f"✅ Carga #{carga_id} de {safra_da_carga['cultura_nome']} salva com sucesso! "
-                    f"({qtd_sacas} sacas = R$ {valor_total_calculado:,.2f})"
-                )
+                if eh_venda:
+                    st.success(
+                        f"✅ Venda da Carga #{carga_id} de {safra_da_carga['cultura_nome']} salva com sucesso! "
+                        f"({qtd_sacas} sacas = R$ {valor_total_calculado:,.2f})"
+                    )
+                else:
+                    st.success(
+                        f"✅ Compra #{carga_id} de {safra_da_carga['cultura_nome']} salva com sucesso! "
+                        f"({qtd_sacas} sacas adicionadas ao estoque por R$ {valor_total_calculado:,.2f})"
+                    )
                 st.balloons()
             except Exception as err:
                 st.error(f"Erro ao salvar a carga no banco: {err}")
@@ -1070,7 +1128,7 @@ elif menu == "🚛 Carga do Caminhão":
             """
             <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.5rem;">
                 <h3 style="color: #F8FAFC; margin: 0; font-size: 1.25rem;">
-                    📋 Histórico dos Últimos Caminhões Registrados
+                    📋 Histórico dos Últimos Caminhões Negociados
                 </h3>
             </div>
             """,
@@ -1083,10 +1141,11 @@ elif menu == "🚛 Carga do Caminhão":
                     {
                         "Carga #": f"#{c['id']}",
                         "Data": c["data"].strftime("%d/%m/%Y") if hasattr(c["data"], "strftime") else str(c["data"]),
+                        "Operação": c.get("tipo_rotulo", "🟢 Venda"),
                         "Produto": f"{c.get('icone', '🌾')} {c.get('cultura_nome', '')}",
                         "Total de Sacas": f"{int(c['quantidade_sacas'])} sacas",
                         "Preço / Saca": f"R$ {c['valor_por_saca']:,.2f}",
-                        "Valor da Carga": f"R$ {c['valor_total']:,.2f}",
+                        "Valor Total": f"R$ {c['valor_total']:,.2f}",
                     }
                     for c in ultimas_cargas
                 ]

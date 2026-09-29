@@ -36,7 +36,7 @@ def obter_resumo_sacas_safra(
                     COUNT(id) AS total_cargas,
                     COALESCE(AVG(quantidade_sacas), 0) AS media_sacas_por_carga
                 FROM cargas
-                {filtro};
+                {filtro} AND COALESCE(tipo_operacao, 'venda') = 'venda';
             """
             cursor.execute(query, tuple(params))
             row = cursor.fetchone()
@@ -64,7 +64,7 @@ def obter_total_sacas_por_cultura() -> list[dict[str, Any]]:
                     COALESCE(SUM(car.quantidade_sacas), 0) AS total_sacas
                 FROM culturas c
                 LEFT JOIN safras s ON s.cultura_id = c.id
-                LEFT JOIN cargas car ON car.safra_id = s.id
+                LEFT JOIN cargas car ON car.safra_id = s.id AND COALESCE(car.tipo_operacao, 'venda') = 'venda'
                 GROUP BY c.id, c.nome
                 ORDER BY total_sacas DESC;
             """

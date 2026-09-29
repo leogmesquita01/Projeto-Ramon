@@ -27,6 +27,7 @@ CREATE TABLE cargas (
     quantidade_sacas NUMERIC NOT NULL,
     preco_id INTEGER,
     valor_total NUMERIC,
+    tipo_operacao TEXT NOT NULL DEFAULT 'venda',
     FOREIGN KEY (safra_id) REFERENCES safras(id),
     FOREIGN KEY (preco_id) REFERENCES precos(id)
 );

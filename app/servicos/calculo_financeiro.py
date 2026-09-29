@@ -41,10 +41,26 @@ def obter_resumo_financeiro_safra(
                 ), 0) AS receita_bruta
                 FROM cargas car
                 LEFT JOIN precos p ON car.preco_id = p.id
-                {filtro_cargas};
+                {filtro_cargas} AND COALESCE(car.tipo_operacao, 'venda') = 'venda';
             """
             cursor.execute(query_receita, tuple(params_receita))
             receita_bruta = float(cursor.fetchone()[0])
+
+            # 1.1 Compras de cargas para revenda (saída de caixa para aquisição de produtos)
+            query_compras_revenda = f"""
+                SELECT COALESCE(SUM(
+                    CASE 
+                        WHEN car.valor_total IS NOT NULL THEN car.valor_total
+                        WHEN p.valor_por_saca IS NOT NULL THEN car.quantidade_sacas * p.valor_por_saca
+                        ELSE 0
+                    END
+                ), 0) AS compras_revenda
+                FROM cargas car
+                LEFT JOIN precos p ON car.preco_id = p.id
+                {filtro_cargas} AND car.tipo_operacao = 'compra';
+            """
+            cursor.execute(query_compras_revenda, tuple(params_receita))
+            compras_revenda = float(cursor.fetchone()[0])
 
             # 2. Filtro dinâmico para custos
             filtro_custos = "WHERE 1=1"
@@ -82,7 +98,7 @@ def obter_resumo_financeiro_safra(
             cursor.execute(query_mao_de_obra, tuple(params_mo))
             custos_mao_de_obra = float(cursor.fetchone()[0])
 
-            custo_total = custos_operacionais + custos_mao_de_obra
+            custo_total = custos_operacionais + custos_mao_de_obra + compras_revenda
             lucro_liquido = receita_bruta - custo_total
 
             margem_lucro_pct = (
@@ -94,6 +110,7 @@ def obter_resumo_financeiro_safra(
             return {
                 "safra_id": safra_id,
                 "receita_bruta": round(receita_bruta, 2),
+                "compras_revenda": round(compras_revenda, 2),
                 "custos_operacionais": round(custos_operacionais, 2),
                 "custos_mao_de_obra": round(custos_mao_de_obra, 2),
                 "custo_total": round(custo_total, 2),
@@ -136,7 +153,7 @@ def obter_vendas_por_cultura(
                 INNER JOIN safras s ON car.safra_id = s.id
                 INNER JOIN culturas cul ON s.cultura_id = cul.id
                 LEFT JOIN precos p ON car.preco_id = p.id
-                {filtro}
+                {filtro} AND COALESCE(car.tipo_operacao, 'venda') = 'venda'
                 GROUP BY cul.id, cul.nome
                 ORDER BY total_valor DESC;
             """
