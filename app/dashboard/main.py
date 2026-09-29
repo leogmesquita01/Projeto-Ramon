@@ -290,23 +290,25 @@ with st.sidebar:
     )
 
     st.divider()
-    st.markdown("<p style='font-size: 0.85rem; font-weight: 700; color: #94A3B8; text-transform: uppercase;'>Culturas Disponíveis</p>", unsafe_allow_html=True)
-    st.markdown(
-        """
-        <div style="display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 1rem;">
-            <span class="agro-badge badge-verde">🌽 Milho</span>
-            <span class="agro-badge badge-verde">🌱 Feijão</span>
-            <span class="agro-badge badge-verde">🌿 Fava</span>
-            <span class="agro-badge badge-verde">🎃 Jerimum</span>
-            <span class="agro-badge badge-verde">🥔 Macaxeira</span>
-            <span class="agro-badge badge-verde">🥔 Batata</span>
-            <span class="agro-badge badge-verde">🍠 Mandioca</span>
-            <span class="agro-badge badge-verde">🍉 Melancia</span>
-            <span class="agro-badge badge-verde">🚜 Silagem</span>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
+    st.markdown("<p style='font-size: 0.8rem; font-weight: 700; color: #94A3B8; text-transform: uppercase; letter-spacing: 0.5px;'>Disponível em Estoque</p>", unsafe_allow_html=True)
+    try:
+        resumo_sidebar = obter_resumo_estoque()
+        com_estoque = [c for c in resumo_sidebar if c["saldo_disponivel"] > 0]
+        if com_estoque:
+            badges_html = "".join([
+                f"""
+                <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.2); border-radius: 8px; padding: 5px 10px; margin-bottom: 5px;">
+                    <span style="font-size: 0.85rem; color: #F8FAFC; font-weight: 600;">{c['icone']} {c['cultura_nome']}</span>
+                    <span style="font-size: 0.8rem; font-weight: 700; color: #34D399;">{int(c['saldo_disponivel']):,} sc</span>
+                </div>
+                """
+                for c in com_estoque
+            ])
+            st.markdown(badges_html, unsafe_allow_html=True)
+        else:
+            st.caption("⚪ Nenhum produto com saldo no galpão.")
+    except Exception:
+        st.caption("⚪ Nenhum produto com saldo no galpão.")
 
     st.caption("🔒 Conectado com segurança ao Supabase")
 
@@ -333,40 +335,28 @@ if menu == "💰 Meu Bolso (Divisão do Dinheiro)":
         unsafe_allow_html=True,
     )
 
-    # Painel de Filtros Integrados
-    st.markdown(
-        """
-        <div style="background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.25); border-radius: 14px; padding: 0.8rem 1.2rem; margin-bottom: 1.2rem;">
-            <span style="color: #34D399; font-weight: 700; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.5px;">
-                ⏳ Filtro de Rendimentos & Período:
-            </span>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
-
-    filtro_col1, filtro_col2 = st.columns([1.6, 1.4], gap="medium")
+    filtro_col1, filtro_col2 = st.columns(2, gap="medium")
 
     with filtro_col1:
-        opcao_periodo = st.radio(
-            "Escolha o intervalo de tempo:",
-            [
+        opcao_periodo = st.selectbox(
+            "⏳ Filtrar por Período de Tempo:",
+            options=[
+                "🌾 Acumulado Geral (Tudo)",
                 "📅 Semanal (Últimos 7 dias)",
                 "📆 Quinzenal (Últimos 15 dias)",
                 "🗓️ Mensal (Últimos 30 dias)",
-                "🌾 Acumulado Geral (Tudo)",
                 "🎯 Escolher Datas Livres",
             ],
-            horizontal=False,
+            index=0,
         )
 
     with filtro_col2:
         opcoes_culturas_filtro = ["🌟 Todas as Culturas (Bolso Geral Consolidado)"] + list(opcoes_safras.keys())
         cultura_escolhida = st.selectbox(
-            "Filtrar por Cultura Comercial:",
+            "🌾 Filtrar por Cultura Comercial:",
             options=opcoes_culturas_filtro,
             index=0,
-            help="Por padrão mostra o lucro total consolidado de todas as culturas juntas. Se quiser ver apenas uma cultura, selecione aqui.",
+            help="Mostra o lucro consolidado de todas as culturas juntas ou filtre apenas uma cultura.",
         )
 
     hoje = date.today()
