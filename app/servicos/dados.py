@@ -593,7 +593,8 @@ def obter_resumo_estoque(safra_id: Optional[int] = None) -> list[dict[str, Any]]
                 entradas = float(entradas)
                 vendidas = float(vendidas)
                 baixas = float(baixas)
-                saldo = entradas - vendidas - baixas
+                # O saldo físico disponível em mãos nunca pode ser negativo
+                saldo = max(0.0, entradas - vendidas - baixas)
                 resumo.append({
                     "safra_id": sid,
                     "cultura_id": cid,

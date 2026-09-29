@@ -732,7 +732,7 @@ elif menu == "📦 Controle de Estoque":
         cols_grid = st.columns(3)
         for i, item in enumerate(resumo_est):
             with cols_grid[i % 3]:
-                saldo = int(item["saldo_disponivel"])
+                saldo = max(0, int(item["saldo_disponivel"]))
                 colhidas = int(item["total_entradas"])
                 vendidas = int(item["total_vendidas"])
                 baixas = int(item["total_baixas"])
@@ -742,18 +742,18 @@ elif menu == "📦 Controle de Estoque":
                     badge_class = "badge-verde"
                     status_txt = f"🟢 {saldo} sacas disponíveis"
                     borda = "rgba(16, 185, 129, 0.4)"
-                elif saldo == 0 and colhidas == 0:
+                elif colhidas == 0 and vendidas == 0:
                     badge_class = "badge-ouro"
-                    status_txt = "⚪ Sem registro de colheita"
+                    status_txt = "⚪ Sem estoque"
                     borda = "rgba(148, 163, 184, 0.2)"
-                elif saldo == 0:
+                elif colhidas == 0 and vendidas > 0:
                     badge_class = "badge-ouro"
-                    status_txt = "🟡 Estoque esgotado (100% vendido)"
-                    borda = "rgba(245, 158, 11, 0.4)"
+                    status_txt = "🟡 0 em estoque (venda direta)"
+                    borda = "rgba(245, 158, 11, 0.3)"
                 else:
                     badge_class = "badge-ouro"
-                    status_txt = f"⚠️ Vendas superam colheitas ({abs(saldo)} sacas)"
-                    borda = "rgba(239, 68, 68, 0.4)"
+                    status_txt = "🟡 Estoque esgotado (100% vendido)"
+                    borda = "rgba(245, 158, 11, 0.3)"
 
                 st.markdown(
                     f"""
@@ -767,7 +767,7 @@ elif menu == "📦 Controle de Estoque":
                             </span>
                         </div>
                         <h2 style="color: #F8FAFC; margin: 0.8rem 0 0.2rem 0; font-size: 1.7rem; font-weight: 800;">
-                            {saldo} <span style="font-size: 0.95rem; font-weight: 500; color: #94A3B8;">sacas em mãos</span>
+                            {saldo} <span style="font-size: 0.95rem; font-weight: 500; color: #94A3B8;">sacas no galpão</span>
                         </h2>
                         <div style="background: rgba(0,0,0,0.25); border-radius: 8px; padding: 0.5rem 0.7rem; margin-top: 0.6rem; font-size: 0.8rem; color: #94A3B8;">
                             📥 <strong>{colhidas}</strong> colhidas &nbsp;|&nbsp; 🚛 <strong>{vendidas}</strong> vendidas &nbsp;|&nbsp; ⚠️ <strong>{baixas}</strong> perdas
@@ -991,10 +991,8 @@ elif menu == "🚛 Carga do Caminhão":
                     saldo_prod = int(resumo_est_prod[0]["saldo_disponivel"]) if resumo_est_prod else 0
                     if saldo_prod > 0:
                         st.caption(f"📦 **Estoque disponível no galpão:** :green[{saldo_prod} sacas]")
-                    elif saldo_prod == 0:
-                        st.caption("📦 **Estoque no galpão:** :orange[0 sacas registradas]")
                     else:
-                        st.caption(f"📦 **Estoque no galpão:** :red[{saldo_prod} sacas (vendas > colheita)]")
+                        st.caption("📦 **Estoque no galpão:** :orange[0 sacas registradas]")
                 except Exception:
                     pass
 
