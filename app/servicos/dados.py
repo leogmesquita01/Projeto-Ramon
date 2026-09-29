@@ -137,7 +137,10 @@ def salvar_carga(
             )
             preco_id = cursor.fetchone()[0]
 
-            valor_total = round(quantidade_sacas * valor_por_saca, 2)
+            if tipo_operacao == "compra" and quantidade_sacas == 0:
+                valor_total = round(valor_por_saca, 2)
+            else:
+                valor_total = round(quantidade_sacas * valor_por_saca, 2)
 
             cursor.execute(
                 """
@@ -325,8 +328,11 @@ def listar_ultimos_custos(
 
                 SELECT 
                     car.id, 
-                    CONCAT('🚚 Compra de Caminhão (', CAST(car.quantidade_sacas AS INTEGER), ' sacas p/ revenda)'), 
-                    COALESCE(car.valor_total, car.quantidade_sacas * COALESCE(p.valor_por_saca, 0)), 
+                    CASE 
+                        WHEN car.quantidade_sacas > 0 THEN CONCAT('🚚 Compra de Caminhão (', CAST(car.quantidade_sacas AS INTEGER), ' sacas)')
+                        ELSE CONCAT('🚚 Compra de Caminhão / Carrada (', cul.nome, ')')
+                    END, 
+                    COALESCE(car.valor_total, p.valor_por_saca, 0), 
                     car.data, 
                     cul.nome
                 FROM cargas car

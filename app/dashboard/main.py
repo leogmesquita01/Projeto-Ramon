@@ -1009,51 +1009,58 @@ elif menu == "🚛 Carga do Caminhão":
                 safra_da_carga = opcoes_safras[produto_carga_rotulo]
 
                 try:
-                    resumo_est_prod = obter_resumo_estoque(safra_id=safra_da_carga["id"])
-                    saldo_prod = int(resumo_est_prod[0]["saldo_disponivel"]) if resumo_est_prod else 0
-                    if saldo_prod > 0:
-                        st.caption(f"📦 **Estoque disponível no galpão:** :green[{saldo_prod} sacas]")
-                    else:
-                        st.caption("📦 **Estoque no galpão:** :orange[0 sacas registradas]")
+                    if eh_venda:
+                        resumo_est_prod = obter_resumo_estoque(safra_id=safra_da_carga["id"])
+                        saldo_prod = int(resumo_est_prod[0]["saldo_disponivel"]) if resumo_est_prod else 0
+                        if saldo_prod > 0:
+                            st.caption(f"📦 **Estoque disponível no galpão:** :green[{saldo_prod} sacas]")
+                        else:
+                            st.caption("📦 **Estoque no galpão:** :orange[0 sacas registradas]")
                 except Exception:
                     pass
 
                 data_carga = st.date_input(
-                    "📅 Data do Carregamento:",
+                    "📅 Data do Carregamento / Negociação:",
                     value=date.today(),
-                    help="Data em que o caminhão foi carregado/negociado",
+                    help="Data em que o caminhão foi negociado",
                 )
 
-                qtd_sacas = st.number_input(
-                    "📦 Quantidade de Sacas (Inteiras):",
-                    min_value=1,
-                    max_value=100000,
-                    value=50,
-                    step=1,
-                    help="Número total de sacas cheias carregadas no caminhão",
-                )
-
-                label_preco = (
-                    "🏷️ Preço Combinado de Venda por Saca (R$):"
-                    if eh_venda
-                    else "🏷️ Preço Pago na Compra por Saca (R$):"
-                )
-                preco_saca = st.number_input(
-                    label_preco,
-                    min_value=0.0,
-                    max_value=5000.0,
-                    value=40.0 if eh_venda else 30.0,
-                    step=0.50,
-                    help="Preço acordado por saca nesta negociação",
-                )
+                if eh_venda:
+                    qtd_sacas = st.number_input(
+                        "📦 Quantidade de Sacas (Inteiras):",
+                        min_value=1,
+                        max_value=100000,
+                        value=50,
+                        step=1,
+                        help="Número total de sacas cheias carregadas no caminhão",
+                    )
+                    preco_saca = st.number_input(
+                        "🏷️ Preço Combinado de Venda por Saca (R$):",
+                        min_value=0.0,
+                        max_value=5000.0,
+                        value=40.0,
+                        step=0.50,
+                        help="Preço acordado para a venda de cada saca",
+                    )
+                    valor_total_calculado = qtd_sacas * preco_saca
+                else:
+                    qtd_sacas = 0
+                    preco_pago = st.number_input(
+                        "🏷️ Preço pago (R$):",
+                        min_value=0.0,
+                        max_value=5000000.0,
+                        value=1500.0,
+                        step=50.0,
+                        help="Valor total pago pelo caminhão / carrada adquirida",
+                    )
+                    preco_saca = preco_pago
+                    valor_total_calculado = preco_pago
 
                 st.markdown("<br>", unsafe_allow_html=True)
-                texto_btn = "💾 Salvar Venda da Carga" if eh_venda else "💾 Salvar Compra para Revenda"
+                texto_btn = "💾 Salvar Venda da Carga" if eh_venda else "💾 Salvar Compra no Sistema"
                 btn_salvar = st.button(texto_btn, type="primary")
 
         with col_calculo:
-            valor_total_calculado = qtd_sacas * preco_saca
-
             if eh_venda:
                 st.markdown(
                     f"""
@@ -1079,18 +1086,18 @@ elif menu == "🚛 Carga do Caminhão":
                     f"""
                     <div class="agro-card" style="border: 2px solid #3B82F6; text-align: center; padding: 1.6rem;">
                         <span class="agro-badge" style="background: rgba(59, 130, 246, 0.2); color: #60A5FA; border: 1px solid rgba(59, 130, 246, 0.4);">
-                            💸 TOTAL PAGO NA AQUISIÇÃO
+                            💸 PREÇO PAGO NA COMPRA
                         </span>
                         <h1 style="color: #60A5FA; margin: 0.6rem 0; font-size: 2.8rem; font-weight: 800;">
                             R$ {valor_total_calculado:,.2f}
                         </h1>
                         <div style="background: rgba(0,0,0,0.25); border-radius: 10px; padding: 0.6rem; display: inline-block; margin-top: 0.3rem;">
                             <span style="color: #CBD5E1; font-size: 1.05rem;">
-                                <strong>{produto_carga_rotulo}</strong>: <strong>{qtd_sacas}</strong> sacas × <strong>R$ {preco_saca:,.2f}</strong>/saca
+                                <strong>{produto_carga_rotulo}</strong>: Carrada / Carga Adquirida
                             </span>
                         </div>
                         <p style="margin: 0.8rem 0 0 0; color: #94A3B8; font-size: 0.88rem;">
-                            Custo pago pelo caminhão. Essas <strong>{qtd_sacas} sacas</strong> entram automaticamente no estoque para revenda!
+                            Custo pago pela carga. Lançado automaticamente como despesa no <strong>Meu Bolso</strong>.
                         </p>
                     </div>
                     """,
@@ -1114,8 +1121,8 @@ elif menu == "🚛 Carga do Caminhão":
                     )
                 else:
                     st.success(
-                        f"✅ Compra #{carga_id} de {safra_da_carga['cultura_nome']} salva com sucesso! "
-                        f"({qtd_sacas} sacas adicionadas ao estoque por R$ {valor_total_calculado:,.2f})"
+                        f"✅ Compra de carga de {safra_da_carga['cultura_nome']} #{carga_id} salva com sucesso! "
+                        f"(Preço pago: R$ {valor_total_calculado:,.2f})"
                     )
                 st.balloons()
             except Exception as err:
@@ -1143,8 +1150,8 @@ elif menu == "🚛 Carga do Caminhão":
                         "Data": c["data"].strftime("%d/%m/%Y") if hasattr(c["data"], "strftime") else str(c["data"]),
                         "Operação": c.get("tipo_rotulo", "🟢 Venda"),
                         "Produto": f"{c.get('icone', '🌾')} {c.get('cultura_nome', '')}",
-                        "Total de Sacas": f"{int(c['quantidade_sacas'])} sacas",
-                        "Preço / Saca": f"R$ {c['valor_por_saca']:,.2f}",
+                        "Total de Sacas": f"{int(c['quantidade_sacas'])} sacas" if c.get("quantidade_sacas", 0) > 0 else "Carrada Fechada",
+                        "Preço / Valor": f"R$ {c['valor_por_saca']:,.2f}/sc" if c.get("quantidade_sacas", 0) > 0 else f"R$ {c['valor_total']:,.2f}",
                         "Valor Total": f"R$ {c['valor_total']:,.2f}",
                     }
                     for c in ultimas_cargas
