@@ -280,7 +280,7 @@ with st.sidebar:
     menu = st.radio(
         "Ir para a tela:",
         [
-            "💰 Meu Bolso (Divisão do Dinheiro)",
+            "💰 Meu Bolso",
             "📦 Controle de Estoque",
             "🚛 Carga do Caminhão",
             "👷 Trabalhadores & Diárias",
@@ -320,16 +320,13 @@ with st.sidebar:
 # =============================================================================
 # TELA 1: "MEU BOLSO" (DIVISÃO FINANCEIRA & RENDIMENTO TOTAL CONSOLIDADO)
 # =============================================================================
-if menu == "💰 Meu Bolso (Divisão do Dinheiro)":
+if menu == "💰 Meu Bolso":
     st.markdown(
         """
-        <div style="margin-bottom: 1.2rem;">
+        <div style="margin-bottom: 1rem;">
             <h1 style="color: #F8FAFC; margin: 0; font-size: 1.85rem; font-weight: 800;">
-                💰 Meu Bolso — Separação Clara do Dinheiro & Lucro Total
+                💰 Meu Bolso
             </h1>
-            <p style="color: #94A3B8; margin: 4px 0 0 0; font-size: 0.95rem;">
-                Veja exatamente para onde foi o dinheiro das vendas de todos os caminhões e quanto realmente sobrou limpo para você.
-            </p>
         </div>
         """,
         unsafe_allow_html=True,
@@ -394,26 +391,6 @@ if menu == "💰 Meu Bolso (Divisão do Dinheiro)":
         safra_id_filtro = opcoes_safras[cultura_escolhida]["id"]
         rotulo_visualizacao = cultura_escolhida
 
-    # Banner informativo do filtro ativo
-    st.markdown(
-        f"""
-        <div class="hero-banner">
-            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
-                <div>
-                    <span class="agro-badge badge-verde">Visualização Ativa</span>
-                    <strong style="margin-left: 8px; font-size: 1.15rem; color: #F8FAFC;">
-                        {rotulo_visualizacao}
-                    </strong>
-                </div>
-                <div>
-                    <span class="agro-badge badge-ouro">⏳ {descricao_periodo}</span>
-                </div>
-            </div>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
-
     try:
         resumo_fin = obter_resumo_financeiro_safra(
             safra_id=safra_id_filtro,
@@ -475,7 +452,7 @@ if menu == "💰 Meu Bolso (Divisão do Dinheiro)":
                 <div class="agro-card">
                     <span style="color: #94A3B8; font-size: 0.85rem; font-weight: 600; text-transform: uppercase;">💵 Total Vendido</span>
                     <h2 style="color: #F8FAFC; margin: 0.4rem 0 0 0; font-size: 1.6rem;">R$ {receita:,.2f}</h2>
-                    <span style="color: #64748B; font-size: 0.8rem;">Entrada dos caminhões vendidos</span>
+                    <span style="color: #64748B; font-size: 0.8rem;">Faturamento bruto</span>
                 </div>
                 """,
                 unsafe_allow_html=True,
@@ -486,7 +463,7 @@ if menu == "💰 Meu Bolso (Divisão do Dinheiro)":
                 <div class="agro-card">
                     <span style="color: #94A3B8; font-size: 0.85rem; font-weight: 600; text-transform: uppercase;">👷 Pessoal / Diárias</span>
                     <h2 style="color: #F87171; margin: 0.4rem 0 0 0; font-size: 1.6rem;">R$ {mao_obra:,.2f}</h2>
-                    <span style="color: #64748B; font-size: 0.8rem;">Mão de obra do período</span>
+                    <span style="color: #64748B; font-size: 0.8rem;">Mão de obra no campo</span>
                 </div>
                 """,
                 unsafe_allow_html=True,
@@ -495,7 +472,7 @@ if menu == "💰 Meu Bolso (Divisão do Dinheiro)":
             st.markdown(
                 f"""
                 <div class="agro-card">
-                    <span style="color: #94A3B8; font-size: 0.85rem; font-weight: 600; text-transform: uppercase;">⚡ Gastos & Aquisições</span>
+                    <span style="color: #94A3B8; font-size: 0.85rem; font-weight: 600; text-transform: uppercase;">⚡ Gastos & Insumos</span>
                     <h2 style="color: #FBBF24; margin: 0.4rem 0 0 0; font-size: 1.6rem;">R$ {total_gastos_operacionais:,.2f}</h2>
                     <span style="color: #64748B; font-size: 0.8rem;">{subtitulo_gastos}</span>
                 </div>
@@ -508,7 +485,7 @@ if menu == "💰 Meu Bolso (Divisão do Dinheiro)":
                 <div class="agro-card">
                     <span style="color: #94A3B8; font-size: 0.85rem; font-weight: 600; text-transform: uppercase;">🌾 Volume Vendido</span>
                     <h2 style="color: #34D399; margin: 0.4rem 0 0 0; font-size: 1.6rem;">{total_sacas_periodo} sacas</h2>
-                    <span style="color: #64748B; font-size: 0.8rem;">{total_cargas_periodo} caminhão(ões) vendidos</span>
+                    <span style="color: #64748B; font-size: 0.8rem;">{total_cargas_periodo} caminhão(ões)</span>
                 </div>
                 """,
                 unsafe_allow_html=True,
@@ -517,18 +494,17 @@ if menu == "💰 Meu Bolso (Divisão do Dinheiro)":
         # Bloco de Detalhamento por Produto Comercial (quando estiver na visão consolidada)
         if safra_id_filtro is None:
             vendas_culturas = obter_vendas_por_cultura(data_inicio=data_ini, data_fim=data_fim)
-            st.markdown("<br>", unsafe_allow_html=True)
-            st.markdown(
-                """
-                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.8rem;">
-                    <h3 style="color: #F8FAFC; margin: 0; font-size: 1.25rem;">
-                        📊 Rendimento por Cultura no Período
-                    </h3>
-                </div>
-                """,
-                unsafe_allow_html=True,
-            )
             if vendas_culturas:
+                st.markdown(
+                    """
+                    <div style="margin: 1.2rem 0 0.6rem 0;">
+                        <h3 style="color: #F8FAFC; margin: 0; font-size: 1.25rem;">
+                            📊 Rendimento por Cultura no Período
+                        </h3>
+                    </div>
+                    """,
+                    unsafe_allow_html=True,
+                )
                 cols_vendas = st.columns(min(len(vendas_culturas), 4))
                 for idx, vc in enumerate(vendas_culturas):
                     with cols_vendas[idx % 4]:
@@ -547,15 +523,11 @@ if menu == "💰 Meu Bolso (Divisão do Dinheiro)":
                             """,
                             unsafe_allow_html=True,
                         )
-            else:
-                st.info("Nenhuma venda registrada para o período selecionado.")
-
-        st.markdown("<br>", unsafe_allow_html=True)
 
         # Tabela detalhada dos caminhões/cargas que compõem este período
         st.markdown(
             f"""
-            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.5rem;">
+            <div style="margin: 1.2rem 0 0.5rem 0;">
                 <h3 style="color: #F8FAFC; margin: 0; font-size: 1.25rem;">
                     🚚 Caminhões Negociados no Período
                 </h3>
@@ -578,8 +550,8 @@ if menu == "💰 Meu Bolso (Divisão do Dinheiro)":
                     "Data": c["data"].strftime("%d/%m/%Y") if hasattr(c["data"], "strftime") else str(c["data"]),
                     "Operação": c.get("tipo_rotulo", "🟢 Venda"),
                     "Produto": f"{c.get('icone', '🌾')} {c.get('cultura_nome', '')}",
-                    "Total de Sacas": f"{int(c['quantidade_sacas'])} sacas",
-                    "Preço / Saca": f"R$ {c['valor_por_saca']:,.2f}",
+                    "Total de Sacas": f"{int(c['quantidade_sacas'])} sacas" if c.get("quantidade_sacas", 0) > 0 else "Carrada Fechada",
+                    "Preço / Valor": f"R$ {c['valor_por_saca']:,.2f}/sc" if c.get("quantidade_sacas", 0) > 0 else f"R$ {c['valor_total']:,.2f}",
                     "Valor Total": f"R$ {c['valor_total']:,.2f}",
                 }
                 for c in cargas_do_periodo
@@ -589,8 +561,7 @@ if menu == "💰 Meu Bolso (Divisão do Dinheiro)":
             st.info(f"Nenhum caminhão registrado para {descricao_periodo.lower()}.")
 
         # Extrato detalhado de despesas abatidas
-        st.markdown("<br>", unsafe_allow_html=True)
-        with st.expander("🔍 Ver Extrato de Onde Foi o Dinheiro (Diárias e Despesas)"):
+        with st.expander("🔍 Ver Extrato de Despesas (Diárias e Insumos)"):
             tab_mo, tab_custo = st.tabs(["👷 Diárias de Trabalhadores Pagas", "⚡ Insumos, Energia & Embalagens"])
 
             with tab_mo:
@@ -644,13 +615,10 @@ if menu == "💰 Meu Bolso (Divisão do Dinheiro)":
 elif menu == "📦 Controle de Estoque":
     st.markdown(
         """
-        <div style="margin-bottom: 1.2rem;">
+        <div style="margin-bottom: 1rem;">
             <h1 style="color: #F8FAFC; margin: 0; font-size: 1.85rem; font-weight: 800;">
-                📦 Controle de Estoque & Armazenamento
+                📦 Controle de Estoque
             </h1>
-            <p style="color: #94A3B8; margin: 4px 0 0 0; font-size: 0.95rem;">
-                Acompanhe em tempo real o que foi colhido e guardado no galpão, o que já foi vendido nos caminhões e o saldo disponível para venda.
-            </p>
         </div>
         """,
         unsafe_allow_html=True,
@@ -724,46 +692,48 @@ elif menu == "📦 Controle de Estoque":
             unsafe_allow_html=True,
         )
 
-    st.markdown("<br>", unsafe_allow_html=True)
+    # VISÃO POR CULTURA EM CARDS DINÂMICOS (Focado nas ativas)
+    culturas_ativas = [
+        item for item in resumo_est
+        if item["saldo_disponivel"] > 0
+        or item["total_entradas"] > 0
+        or item["total_vendidas"] > 0
+        or item.get("total_compras", 0) > 0
+        or item["total_baixas"] > 0
+    ]
+    culturas_inativas = [item for item in resumo_est if item not in culturas_ativas]
 
-    # VISÃO POR CULTURA EM CARDS DINÂMICOS
-    st.markdown(
-        """
-        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.6rem;">
-            <h3 style="color: #F8FAFC; margin: 0; font-size: 1.25rem;">
-                🌾 Saldo em Estoque por Cultura
-            </h3>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
-
-    if resumo_est:
-        cols_grid = st.columns(3)
-        for i, item in enumerate(resumo_est):
-            with cols_grid[i % 3]:
+    if culturas_ativas:
+        st.markdown(
+            """
+            <div style="margin: 1.2rem 0 0.6rem 0;">
+                <h3 style="color: #F8FAFC; margin: 0; font-size: 1.25rem;">
+                    🌾 Saldo em Estoque por Cultura
+                </h3>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+        cols_grid = st.columns(min(len(culturas_ativas), 3))
+        for i, item in enumerate(culturas_ativas):
+            with cols_grid[i % len(cols_grid)]:
                 saldo = max(0, int(item["saldo_disponivel"]))
                 colhidas = int(item["total_entradas"])
                 compras = int(item.get("total_compras", 0))
                 vendidas = int(item["total_vendidas"])
                 baixas = int(item["total_baixas"])
 
-                # Cor e badge do status
                 if saldo > 0:
                     badge_class = "badge-verde"
                     status_txt = f"🟢 {saldo} sacas disponíveis"
                     borda = "rgba(16, 185, 129, 0.4)"
-                elif colhidas == 0 and compras == 0 and vendidas == 0:
-                    badge_class = "badge-ouro"
-                    status_txt = "⚪ Sem estoque"
-                    borda = "rgba(148, 163, 184, 0.2)"
                 elif (colhidas + compras) == 0 and vendidas > 0:
                     badge_class = "badge-ouro"
                     status_txt = "🟡 0 em estoque (venda direta)"
                     borda = "rgba(245, 158, 11, 0.3)"
                 else:
                     badge_class = "badge-ouro"
-                    status_txt = "🟡 Estoque esgotado (100% vendido)"
+                    status_txt = "🟡 Estoque esgotado"
                     borda = "rgba(245, 158, 11, 0.3)"
 
                 st.markdown(
@@ -787,8 +757,12 @@ elif menu == "📦 Controle de Estoque":
                     """,
                     unsafe_allow_html=True,
                 )
-
-    st.markdown("<br>", unsafe_allow_html=True)
+        if culturas_inativas:
+            with st.expander(f"👁️ Ver outras culturas cadastradas sem movimentação ({len(culturas_inativas)})"):
+                nomes_inativas = ", ".join([f"{c['icone']} {c['cultura_nome']}" for c in culturas_inativas])
+                st.caption(f"Sem movimentações no momento: {nomes_inativas}")
+    else:
+        st.info("Nenhuma cultura com movimentação registrada ainda. Registre a primeira colheita abaixo!")
 
     # FORMULÁRIOS DE LANÇAMENTO
     col_entrada, col_ajuste = st.columns([1.1, 1], gap="large")
@@ -834,7 +808,6 @@ elif menu == "📦 Controle de Estoque":
                 key="obs_est_entrada",
             )
 
-            st.markdown("<br>", unsafe_allow_html=True)
             btn_salvar_entrada = st.button("💾 Registrar Entrada no Estoque", type="primary", key="btn_salvar_est_entrada")
 
             if btn_salvar_entrada:
@@ -855,7 +828,6 @@ elif menu == "📦 Controle de Estoque":
     with col_ajuste:
         with st.container(border=True):
             st.markdown("<h3 style='color: #FBBF24; margin-top: 0; font-size: 1.2rem;'>🔻 Registrar Baixa (Perda ou Consumo)</h3>", unsafe_allow_html=True)
-            st.caption("Dê baixa em sacas avariadas, perdas por umidade ou sacas utilizadas para consumo interno.")
 
             cultura_baixa_rotulo = st.selectbox(
                 "🌾 Produto:",
@@ -893,7 +865,6 @@ elif menu == "📦 Controle de Estoque":
                 key="obs_est_baixa",
             )
 
-            st.markdown("<br>", unsafe_allow_html=True)
             btn_salvar_baixa = st.button("🔻 Registrar Baixa no Estoque", key="btn_salvar_est_baixa")
 
             if btn_salvar_baixa:
@@ -912,27 +883,10 @@ elif menu == "📦 Controle de Estoque":
                 except Exception as err:
                     st.error(f"Erro ao registrar baixa: {err}")
 
-    # Dica visual de integração com as Cargas do Caminhão
-    st.markdown(
-        """
-        <div style="background: rgba(16, 185, 129, 0.08); border-left: 4px solid #10B981; border-radius: 8px; padding: 0.8rem 1.2rem; margin-top: 1.2rem;">
-            <span style="color: #34D399; font-weight: 700; font-size: 0.9rem;">
-                💡 Como funciona a saída por vendas:
-            </span>
-            <span style="color: #CBD5E1; font-size: 0.9rem; margin-left: 6px;">
-                Toda carga registrada na tela <strong>🚛 Carga do Caminhão</strong> dá baixa automaticamente no saldo desta tela. Não é necessário registrar a venda duas vezes!
-            </span>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
-
-    st.markdown("<br>", unsafe_allow_html=True)
-
     # TABELA DE HISTÓRICO DE MOVIMENTAÇÕES DE ESTOQUE
     st.markdown(
         """
-        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.5rem;">
+        <div style="margin: 1.4rem 0 0.5rem 0;">
             <h3 style="color: #F8FAFC; margin: 0; font-size: 1.25rem;">
                 📋 Histórico das Últimas Entradas e Baixas no Armazém
             </h3>
@@ -969,13 +923,10 @@ elif menu == "📦 Controle de Estoque":
 elif menu == "🚛 Carga do Caminhão":
     st.markdown(
         """
-        <div style="margin-bottom: 1.2rem;">
+        <div style="margin-bottom: 1rem;">
             <h1 style="color: #F8FAFC; margin: 0; font-size: 1.85rem; font-weight: 800;">
-                🚛 Registro & Cálculo de Carga do Caminhão
+                🚛 Carga do Caminhão
             </h1>
-            <p style="color: #94A3B8; margin: 4px 0 0 0; font-size: 0.95rem;">
-                Calcule instantaneamente o valor bruto da carga negociada e registre a entrega.
-            </p>
         </div>
         """,
         unsafe_allow_html=True,
@@ -1056,7 +1007,6 @@ elif menu == "🚛 Carga do Caminhão":
                     preco_saca = preco_pago
                     valor_total_calculado = preco_pago
 
-                st.markdown("<br>", unsafe_allow_html=True)
                 texto_btn = "💾 Salvar Venda da Carga" if eh_venda else "💾 Salvar Compra no Sistema"
                 btn_salvar = st.button(texto_btn, type="primary")
 
@@ -1074,9 +1024,6 @@ elif menu == "🚛 Carga do Caminhão":
                                 <strong>{produto_carga_rotulo}</strong>: <strong>{qtd_sacas}</strong> sacas × <strong>R$ {preco_saca:,.2f}</strong>/saca
                             </span>
                         </div>
-                        <p style="margin: 0.8rem 0 0 0; color: #94A3B8; font-size: 0.88rem;">
-                            Entrada bruta da venda. Abate automaticamente do seu estoque no galpão.
-                        </p>
                     </div>
                     """,
                     unsafe_allow_html=True,
@@ -1096,9 +1043,6 @@ elif menu == "🚛 Carga do Caminhão":
                                 <strong>{produto_carga_rotulo}</strong>: Carrada / Carga Adquirida
                             </span>
                         </div>
-                        <p style="margin: 0.8rem 0 0 0; color: #94A3B8; font-size: 0.88rem;">
-                            Custo pago pela carga. Lançado automaticamente como despesa no <strong>Meu Bolso</strong>.
-                        </p>
                     </div>
                     """,
                     unsafe_allow_html=True,
@@ -1116,24 +1060,20 @@ elif menu == "🚛 Carga do Caminhão":
                 )
                 if eh_venda:
                     st.success(
-                        f"✅ Venda da Carga #{carga_id} de {safra_da_carga['cultura_nome']} salva com sucesso! "
-                        f"({qtd_sacas} sacas = R$ {valor_total_calculado:,.2f})"
+                        f"✅ Venda #{carga_id} salva! ({qtd_sacas} sacas = R$ {valor_total_calculado:,.2f})"
                     )
                 else:
                     st.success(
-                        f"✅ Compra de carga de {safra_da_carga['cultura_nome']} #{carga_id} salva com sucesso! "
-                        f"(Preço pago: R$ {valor_total_calculado:,.2f})"
+                        f"✅ Compra #{carga_id} salva! (Preço pago: R$ {valor_total_calculado:,.2f})"
                     )
                 st.balloons()
             except Exception as err:
                 st.error(f"Erro ao salvar a carga no banco: {err}")
 
-        st.markdown("<br>", unsafe_allow_html=True)
-
         # Histórico de cargas de caminhões
         st.markdown(
             """
-            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.5rem;">
+            <div style="margin: 1.4rem 0 0.5rem 0;">
                 <h3 style="color: #F8FAFC; margin: 0; font-size: 1.25rem;">
                     📋 Histórico dos Últimos Caminhões Negociados
                 </h3>
@@ -1169,13 +1109,10 @@ elif menu == "🚛 Carga do Caminhão":
 elif menu == "👷 Trabalhadores & Diárias":
     st.markdown(
         """
-        <div style="margin-bottom: 1.2rem;">
+        <div style="margin-bottom: 1rem;">
             <h1 style="color: #F8FAFC; margin: 0; font-size: 1.85rem; font-weight: 800;">
                 👷 Trabalhadores & Diárias
             </h1>
-            <p style="color: #94A3B8; margin: 4px 0 0 0; font-size: 0.95rem;">
-                Controle de presença, diárias trabalhadas e acerto de pagamentos da equipe no campo.
-            </p>
         </div>
         """,
         unsafe_allow_html=True,
@@ -1233,7 +1170,6 @@ elif menu == "👷 Trabalhadores & Diárias":
                 help="Preço acordado pelo dia de trabalho",
             )
 
-            st.markdown("<br>", unsafe_allow_html=True)
             btn_salvar_pgto = st.button("💾 Registrar Pagamento de Diária", type="primary", disabled=(trab_id is None or safra_padrao_id is None))
 
     with col_resumo:
@@ -1251,9 +1187,6 @@ elif menu == "👷 Trabalhadores & Diárias":
                         <strong>{qtd_diarias}</strong> diárias × <strong>R$ {valor_diaria:,.2f}</strong>/dia
                     </span>
                 </div>
-                <p style="margin: 0.8rem 0 0 0; color: #94A3B8; font-size: 0.88rem;">
-                    Este valor é abatido diretamente da receita na tela Meu Bolso.
-                </p>
             </div>
             """,
             unsafe_allow_html=True,
@@ -1272,10 +1205,17 @@ elif menu == "👷 Trabalhadores & Diárias":
         except Exception as e:
             st.error(f"Erro ao salvar pagamento: {e}")
 
-    st.markdown("<br>", unsafe_allow_html=True)
-
     # Histórico de pagamentos
-    st.markdown("<h3 style='color: #F8FAFC; margin: 0 0 0.5rem 0; font-size: 1.25rem;'>📋 Histórico Geral de Diárias Pagas</h3>", unsafe_allow_html=True)
+    st.markdown(
+        """
+        <div style="margin: 1.4rem 0 0.5rem 0;">
+            <h3 style="color: #F8FAFC; margin: 0; font-size: 1.25rem;">
+                📋 Histórico Geral de Diárias Pagas
+            </h3>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
     try:
         pagamentos = listar_ultimos_pagamentos(safra_id=None, limite=50)
         if pagamentos:
@@ -1301,13 +1241,10 @@ elif menu == "👷 Trabalhadores & Diárias":
 elif menu == "💸 Custos & Insumos":
     st.markdown(
         """
-        <div style="margin-bottom: 1.2rem;">
+        <div style="margin-bottom: 1rem;">
             <h1 style="color: #F8FAFC; margin: 0; font-size: 1.85rem; font-weight: 800;">
-                💸 Custos & Insumos da Lavoura
+                💸 Custos & Insumos
             </h1>
-            <p style="color: #94A3B8; margin: 4px 0 0 0; font-size: 0.95rem;">
-                Anotação rápida de despesas: energia do moedor, embalagens/sacaria, óleo diesel e manutenção.
-            </p>
         </div>
         """,
         unsafe_allow_html=True,
@@ -1363,7 +1300,6 @@ elif menu == "💸 Custos & Insumos":
                 else:
                     descricao_custo = categoria
 
-            st.markdown("<br>", unsafe_allow_html=True)
             btn_salvar_custo = st.button("💾 Salvar Esta Despesa no Sistema", type="primary", disabled=(safra_custo is None))
 
     with col_preview_custo:
@@ -1379,9 +1315,6 @@ elif menu == "💸 Custos & Insumos":
                         <strong>{descricao_custo}</strong>
                     </span>
                 </div>
-                <p style="margin: 0.8rem 0 0 0; color: #94A3B8; font-size: 0.88rem;">
-                    Esse gasto será abatido diretamente na tela Meu Bolso do faturamento consolidado.
-                </p>
             </div>
             """,
             unsafe_allow_html=True,
@@ -1400,10 +1333,17 @@ elif menu == "💸 Custos & Insumos":
         except Exception as e:
             st.error(f"Erro ao salvar despesa: {e}")
 
-    st.markdown("<br>", unsafe_allow_html=True)
-
     # Histórico de custos
-    st.markdown("<h3 style='color: #F8FAFC; margin: 0 0 0.5rem 0; font-size: 1.25rem;'>📋 Histórico Geral de Despesas</h3>", unsafe_allow_html=True)
+    st.markdown(
+        """
+        <div style="margin: 1.4rem 0 0.5rem 0;">
+            <h3 style="color: #F8FAFC; margin: 0; font-size: 1.25rem;">
+                📋 Histórico Geral de Despesas
+            </h3>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
     try:
         custos = listar_ultimos_custos(safra_id=None, limite=50)
         if custos:
