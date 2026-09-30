@@ -142,7 +142,7 @@ def renderizar_tela_meu_bolso(
         subtitulo_gastos = (
             f"Insumos R$ {custos_op:,.0f} | Cargas p/ Revenda R$ {compras_revenda:,.0f}"
             if compras_revenda > 0
-            else "Moedor, sacos, combustível"
+            else "Energia, sacos, combustível"
         )
 
         # Métricas em colunas com cartões estilizados

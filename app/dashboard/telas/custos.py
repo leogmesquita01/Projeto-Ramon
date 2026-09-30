@@ -33,7 +33,7 @@ def renderizar_tela_custos(
             categoria = st.radio(
                 "Tipo de Gasto:",
                 [
-                    "⚡ Energia do Moedor",
+                    "⚡ Energia",
                     "📦 Embalagens & Sacaria",
                     "⛽ Óleo Diesel / Combustível",
                     "🚜 Peças & Manutenção",
@@ -68,7 +68,7 @@ def renderizar_tela_custos(
                     descricao_custo = "Embalagens & Sacaria"
             else:
                 valor_final_custo = st.number_input("Valor da Despesa (R$):", min_value=1.0, value=150.0, step=10.0)
-                detalhe_extra = st.text_input("Observação / Detalhe (opcional):", placeholder="Ex: Conta de luz do moedor set/2026, correia, etc.")
+                detalhe_extra = st.text_input("Observação / Detalhe (opcional):", placeholder="Ex: Conta de luz set/2026, correia, etc.")
                 if detalhe_extra.strip():
                     descricao_custo = f"{categoria} - {detalhe_extra.strip()}"
                 else:

@@ -271,7 +271,7 @@ def criar_safra_rapida(nome_cultura: str, data_inicio: date) -> int:
 
 
 # -----------------------------------------------------------------------------
-# OPERAÇÕES DE CUSTOS & DESPESAS (Energia do moedor, embalagens, insumos)
+# OPERAÇÕES DE CUSTOS & DESPESAS (Energia, embalagens, insumos)
 # -----------------------------------------------------------------------------
 def salvar_custo(safra_id: int, descricao: str, valor: float, data_custo: date) -> int:
     """

@@ -24,7 +24,7 @@ Aplicativo web moderno para gestão financeira, controle de colheita e fluxo de 
   * Lançamento de diárias trabalhadas e controle de acertos financeiros.
 
 * **💸 Custos & Insumos:**
-  * Registro focado nas despesas reais: **Energia do moedor**, **Embalagens & Sacaria** (com calculadora de sacos), **Óleo Diesel** e **Manutenção**.
+  * Registro focado nas despesas reais: **Energia**, **Embalagens & Sacaria** (com calculadora de sacos), **Óleo Diesel** e **Manutenção**.
 
 * **🌾 8 Culturas Comerciais Nativas:**
   * Milho 🌽, Feijão 🌱, Fava 🌿, Jerimum 🎃, Macaxeira 🥔, Batata 🥔, Mandioca 🍠 e Melancia 🍉.
