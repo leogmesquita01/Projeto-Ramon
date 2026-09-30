@@ -796,12 +796,6 @@ elif menu == "📦 Controle de Estoque":
                     key="qtd_est_entrada",
                 )
 
-            local_armazenamento = st.selectbox(
-                "📍 Local de Armazenamento:",
-                options=["Galpão Principal", "Silo 1", "Silo 2", "Tulha", "Terreiro / Secador", "Outro"],
-                key="local_est_entrada",
-            )
-
             obs_entrada = st.text_input(
                 "📝 Observação / Talhão (Opcional):",
                 placeholder="Ex: Talhão norte, safra de inverno, saco de 60kg",
@@ -817,7 +811,7 @@ elif menu == "📦 Controle de Estoque":
                         tipo="entrada",
                         data_mov=data_entrada,
                         quantidade_sacas=qtd_entrada,
-                        local_armazenamento=local_armazenamento,
+                        local_armazenamento="Galpão",
                         observacao=obs_entrada,
                     )
                     st.success(f"✅ Entrada de {qtd_entrada} sacas de {safra_entrada['cultura_nome']} adicionada ao estoque com sucesso!")
@@ -905,7 +899,6 @@ elif menu == "📦 Controle de Estoque":
                     "Cultura": f"{m['icone']} {m['cultura_nome']}",
                     "Tipo de Movimento": m["tipo_rotulo"],
                     "Quantidade": f"{int(m['quantidade_sacas'])} sacas",
-                    "Local": m["local_armazenamento"],
                     "Observações": m["observacao"] or "-",
                 }
                 for m in movs
