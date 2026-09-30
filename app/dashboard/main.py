@@ -765,11 +765,11 @@ elif menu == "📦 Controle de Estoque":
         st.info("Nenhuma cultura com movimentação registrada ainda. Registre a primeira colheita abaixo!")
 
     # FORMULÁRIOS DE LANÇAMENTO
-    col_entrada, col_ajuste = st.columns([1.1, 1], gap="large")
+    col_entrada, col_ajuste = st.columns(2, gap="large")
 
     with col_entrada:
         with st.container(border=True):
-            st.markdown("<h3 style='color: #34D399; margin-top: 0; font-size: 1.2rem;'>📥 Registrar Colheita / Entrada no Galpão</h3>", unsafe_allow_html=True)
+            st.markdown("<h3 style='color: #34D399; margin-top: 0; font-size: 1.2rem;'>📥 Registrar Entrada no Galpão</h3>", unsafe_allow_html=True)
             
             cultura_entrada_rotulo = st.selectbox(
                 "🌾 Produto / Cultura Colhida:",
@@ -782,7 +782,7 @@ elif menu == "📦 Controle de Estoque":
             col_data_e, col_qtd_e = st.columns(2)
             with col_data_e:
                 data_entrada = st.date_input(
-                    "📅 Data da Colheita / Entrada:",
+                    "📅 Data da Entrada:",
                     value=date.today(),
                     key="data_est_entrada",
                 )
@@ -802,7 +802,7 @@ elif menu == "📦 Controle de Estoque":
                 key="obs_est_entrada",
             )
 
-            btn_salvar_entrada = st.button("💾 Registrar Entrada no Estoque", type="primary", key="btn_salvar_est_entrada")
+            btn_salvar_entrada = st.button("💾 Registrar Entrada", type="primary", key="btn_salvar_est_entrada")
 
             if btn_salvar_entrada:
                 try:
@@ -821,25 +821,33 @@ elif menu == "📦 Controle de Estoque":
 
     with col_ajuste:
         with st.container(border=True):
-            st.markdown("<h3 style='color: #FBBF24; margin-top: 0; font-size: 1.2rem;'>🔻 Registrar Baixa (Perda ou Consumo)</h3>", unsafe_allow_html=True)
+            st.markdown("<h3 style='color: #FBBF24; margin-top: 0; font-size: 1.2rem;'>🔻 Registrar Baixa no Estoque</h3>", unsafe_allow_html=True)
 
-            cultura_baixa_rotulo = st.selectbox(
-                "🌾 Produto:",
-                options=list(opcoes_safras.keys()),
-                key="sel_est_baixa",
-            )
-            safra_baixa = opcoes_safras[cultura_baixa_rotulo]
-
-            col_tipo_b, col_qtd_b = st.columns(2)
+            col_prod_b, col_tipo_b = st.columns(2)
+            with col_prod_b:
+                cultura_baixa_rotulo = st.selectbox(
+                    "🌾 Produto / Cultura:",
+                    options=list(opcoes_safras.keys()),
+                    key="sel_est_baixa",
+                )
+                safra_baixa = opcoes_safras[cultura_baixa_rotulo]
             with col_tipo_b:
                 tipo_baixa = st.selectbox(
                     "Tipo de Baixa:",
                     options=["Perda / Avaria / Mofo", "Consumo Próprio / Uso Interno"],
                     key="tipo_est_baixa",
                 )
+
+            col_data_b, col_qtd_b = st.columns(2)
+            with col_data_b:
+                data_baixa = st.date_input(
+                    "📅 Data da Baixa:",
+                    value=date.today(),
+                    key="data_est_baixa",
+                )
             with col_qtd_b:
                 qtd_baixa = st.number_input(
-                    "Quantidade de Sacas:",
+                    "📦 Quantidade de Sacas:",
                     min_value=1,
                     max_value=10000,
                     value=5,
@@ -847,19 +855,13 @@ elif menu == "📦 Controle de Estoque":
                     key="qtd_est_baixa",
                 )
 
-            data_baixa = st.date_input(
-                "Data da Baixa:",
-                value=date.today(),
-                key="data_est_baixa",
-            )
-
             obs_baixa = st.text_input(
-                "Motivo / Detalhes:",
+                "📝 Motivo / Detalhes (Opcional):",
                 placeholder="Ex: Sacas molhadas pela chuva, ração para criação da fazenda",
                 key="obs_est_baixa",
             )
 
-            btn_salvar_baixa = st.button("🔻 Registrar Baixa no Estoque", key="btn_salvar_est_baixa")
+            btn_salvar_baixa = st.button("🔻 Registrar Baixa", key="btn_salvar_est_baixa")
 
             if btn_salvar_baixa:
                 try:
