@@ -68,3 +68,23 @@ CREATE TABLE estoque_movimentacoes (
     criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (safra_id) REFERENCES safras(id)
 );
+
+CREATE TABLE agendamentos_vendas (
+    id SERIAL PRIMARY KEY,
+    safra_id INTEGER NOT NULL,
+    cliente_nome TEXT NOT NULL,
+    cliente_telefone TEXT,
+    data_prevista DATE NOT NULL,
+    quantidade_sacas NUMERIC NOT NULL,
+    preco_estimado_saca NUMERIC NOT NULL,
+    valor_total_estimado NUMERIC NOT NULL,
+    status TEXT NOT NULL DEFAULT 'pendente',
+    local_entrega TEXT,
+    motorista_placa TEXT,
+    valor_adiantamento NUMERIC DEFAULT 0,
+    observacoes TEXT,
+    carga_id INTEGER,
+    criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (safra_id) REFERENCES safras(id),
+    FOREIGN KEY (carga_id) REFERENCES cargas(id)
+);

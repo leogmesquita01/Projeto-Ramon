@@ -166,6 +166,21 @@ def aplicar_estilos() -> None:
             color: #FBBF24;
             border: 1px solid rgba(245, 158, 11, 0.3);
         }
+        .badge-azul {
+            background: rgba(59, 130, 246, 0.15);
+            color: #60A5FA;
+            border: 1px solid rgba(59, 130, 246, 0.3);
+        }
+        .badge-vermelho {
+            background: rgba(239, 68, 68, 0.15);
+            color: #F87171;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+        .badge-cinza {
+            background: rgba(148, 163, 184, 0.15);
+            color: #94A3B8;
+            border: 1px solid rgba(148, 163, 184, 0.3);
+        }
 
         /* Botão primário grande, moderno e com gradiente (fácil de tocar no celular) */
         div.stButton > button {

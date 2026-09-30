@@ -7,6 +7,7 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../.
 import streamlit as st
 
 from app.dashboard.estilos import aplicar_estilos
+from app.dashboard.telas.agenda_vendas import renderizar_tela_agenda_vendas
 from app.dashboard.telas.cargas import renderizar_tela_cargas
 from app.dashboard.telas.custos import renderizar_tela_custos
 from app.dashboard.telas.estoque import renderizar_tela_estoque
@@ -66,6 +67,7 @@ with st.sidebar:
         "Ir para a tela:",
         [
             "💰 Meu Bolso",
+            "📅 Agenda de Vendas",
             "📦 Controle de Estoque",
             "🚛 Carga do Caminhão",
             "👷 Trabalhadores & Diárias",
@@ -105,6 +107,8 @@ with st.sidebar:
 # -----------------------------------------------------------------------------
 if menu == "💰 Meu Bolso":
     renderizar_tela_meu_bolso(safras, opcoes_safras)
+elif menu == "📅 Agenda de Vendas":
+    renderizar_tela_agenda_vendas(safras, opcoes_safras)
 elif menu == "📦 Controle de Estoque":
     renderizar_tela_estoque(safras, opcoes_safras)
 elif menu == "🚛 Carga do Caminhão":

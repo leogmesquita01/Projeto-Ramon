@@ -80,6 +80,43 @@ def garantir_culturas_padrao() -> None:
     finally:
         conn.close()
 
+    garantir_tabela_agendamentos()
+
+
+def garantir_tabela_agendamentos() -> None:
+    """
+    Garante que a tabela agendamentos_vendas exista no banco.
+    """
+    conn = obter_conexao()
+    try:
+        with conn.cursor() as cursor:
+            cursor.execute(
+                """
+                CREATE TABLE IF NOT EXISTS agendamentos_vendas (
+                    id SERIAL PRIMARY KEY,
+                    safra_id INTEGER NOT NULL REFERENCES safras(id),
+                    cliente_nome TEXT NOT NULL,
+                    cliente_telefone TEXT,
+                    data_prevista DATE NOT NULL,
+                    quantidade_sacas NUMERIC NOT NULL,
+                    preco_estimado_saca NUMERIC NOT NULL,
+                    valor_total_estimado NUMERIC NOT NULL,
+                    status TEXT NOT NULL DEFAULT 'pendente',
+                    local_entrega TEXT,
+                    motorista_placa TEXT,
+                    valor_adiantamento NUMERIC DEFAULT 0,
+                    observacoes TEXT,
+                    carga_id INTEGER REFERENCES cargas(id),
+                    criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                );
+                """
+            )
+            conn.commit()
+    except Exception:
+        pass
+    finally:
+        conn.close()
+
 
 @st.cache_data(ttl=120)
 def listar_safras_ativas() -> list[dict[str, Any]]:
@@ -684,13 +721,15 @@ def obter_resumo_estoque(safra_id: Optional[int] = None) -> list[dict[str, Any]]
 def limpar_dados_teste() -> dict[str, int]:
     """
     Remove todos os registros de teste de cargas, pagamentos de trabalhadores,
-    custos, estoque, trabalhadores e precos avulsos, mantendo intactas as culturas e safras.
+    custos, estoque, trabalhadores, agendamentos e precos avulsos, mantendo intactas as culturas e safras.
     """
     conn = obter_conexao()
     try:
         with conn.cursor() as cursor:
             cursor.execute("DELETE FROM estoque_movimentacoes;")
             estoque_del = cursor.rowcount
+            cursor.execute("DELETE FROM agendamentos_vendas;")
+            agendamentos_del = cursor.rowcount
             cursor.execute("DELETE FROM cargas;")
             cargas_del = cursor.rowcount
             cursor.execute("DELETE FROM pagamentos_trabalhadores;")
@@ -705,6 +744,7 @@ def limpar_dados_teste() -> dict[str, int]:
             limpar_cache_dados()
             return {
                 "estoque": estoque_del,
+                "agendamentos": agendamentos_del,
                 "cargas": cargas_del,
                 "pagamentos": pagamentos_del,
                 "custos": custos_del,
@@ -713,5 +753,284 @@ def limpar_dados_teste() -> dict[str, int]:
             }
     finally:
         conn.close()
+
+
+# -----------------------------------------------------------------------------
+# OPERAÇÕES DE AGENDAMENTO DE VENDAS (Compromissos, Entregas Futuras & Pedidos)
+# -----------------------------------------------------------------------------
+def salvar_agendamento(
+    safra_id: int,
+    cliente_nome: str,
+    data_prevista: date,
+    quantidade_sacas: float,
+    preco_estimado_saca: float,
+    status: str = "pendente",
+    cliente_telefone: str = "",
+    local_entrega: str = "",
+    motorista_placa: str = "",
+    valor_adiantamento: float = 0.0,
+    observacoes: str = "",
+) -> int:
+    """
+    Registra um novo agendamento ou pedido futuro de venda.
+    """
+    valor_total_estimado = round(quantidade_sacas * preco_estimado_saca, 2)
+    conn = obter_conexao()
+    try:
+        with conn.cursor() as cursor:
+            cursor.execute(
+                """
+                INSERT INTO agendamentos_vendas (
+                    safra_id, cliente_nome, cliente_telefone, data_prevista,
+                    quantidade_sacas, preco_estimado_saca, valor_total_estimado,
+                    status, local_entrega, motorista_placa, valor_adiantamento,
+                    observacoes
+                )
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                RETURNING id;
+                """,
+                (
+                    safra_id,
+                    cliente_nome.strip(),
+                    cliente_telefone.strip(),
+                    data_prevista,
+                    quantidade_sacas,
+                    preco_estimado_saca,
+                    valor_total_estimado,
+                    status,
+                    local_entrega.strip(),
+                    motorista_placa.strip().upper(),
+                    valor_adiantamento,
+                    observacoes.strip(),
+                ),
+            )
+            agendamento_id = cursor.fetchone()[0]
+            conn.commit()
+            limpar_cache_dados()
+            return agendamento_id
+    finally:
+        conn.close()
+
+
+def atualizar_status_agendamento(agendamento_id: int, novo_status: str) -> None:
+    """
+    Atualiza o status de um agendamento (ex: 'pendente', 'confirmado', 'cancelado').
+    """
+    conn = obter_conexao()
+    try:
+        with conn.cursor() as cursor:
+            cursor.execute(
+                "UPDATE agendamentos_vendas SET status = %s WHERE id = %s;",
+                (novo_status, agendamento_id),
+            )
+            conn.commit()
+            limpar_cache_dados()
+    finally:
+        conn.close()
+
+
+def efetivar_agendamento_como_carga(
+    agendamento_id: int,
+    data_carga: date,
+    quantidade_sacas: int,
+    valor_por_saca: float,
+) -> int:
+    """
+    Converte um agendamento em uma Carga efetivamente vendida:
+    - Cadastra o preço e a carga no sistema (impactando Meu Bolso e Estoque).
+    - Atualiza o agendamento para 'concluido' com o vínculo da carga_id.
+    """
+    conn = obter_conexao()
+    try:
+        with conn.cursor() as cursor:
+            # Recupera os dados da safra e cultura do agendamento
+            cursor.execute(
+                """
+                SELECT a.safra_id, s.cultura_id
+                FROM agendamentos_vendas a
+                INNER JOIN safras s ON a.safra_id = s.id
+                WHERE a.id = %s;
+                """,
+                (agendamento_id,),
+            )
+            res = cursor.fetchone()
+            if not res:
+                raise ValueError("Agendamento não encontrado.")
+            safra_id, cultura_id = res
+
+            # Registra preço
+            cursor.execute(
+                """
+                INSERT INTO precos (cultura_id, data, valor_por_saca)
+                VALUES (%s, %s, %s)
+                RETURNING id;
+                """,
+                (cultura_id, data_carga, valor_por_saca),
+            )
+            preco_id = cursor.fetchone()[0]
+
+            valor_total = round(quantidade_sacas * valor_por_saca, 2)
+
+            # Registra carga
+            cursor.execute(
+                """
+                INSERT INTO cargas (safra_id, data, quantidade_sacas, preco_id, valor_total, tipo_operacao)
+                VALUES (%s, %s, %s, %s, %s, 'venda')
+                RETURNING id;
+                """,
+                (safra_id, data_carga, quantidade_sacas, preco_id, valor_total),
+            )
+            carga_id = cursor.fetchone()[0]
+
+            # Atualiza status e vincula carga ao agendamento
+            cursor.execute(
+                """
+                UPDATE agendamentos_vendas
+                SET status = 'concluido',
+                    carga_id = %s
+                WHERE id = %s;
+                """,
+                (carga_id, agendamento_id),
+            )
+            conn.commit()
+            limpar_cache_dados()
+            return carga_id
+    finally:
+        conn.close()
+
+
+def excluir_agendamento(agendamento_id: int) -> None:
+    """
+    Remove definitivamente um agendamento do banco de dados.
+    """
+    conn = obter_conexao()
+    try:
+        with conn.cursor() as cursor:
+            cursor.execute("DELETE FROM agendamentos_vendas WHERE id = %s;", (agendamento_id,))
+            conn.commit()
+            limpar_cache_dados()
+    finally:
+        conn.close()
+
+
+@st.cache_data(ttl=30)
+def listar_agendamentos(
+    safra_id: Optional[int] = None,
+    status: Optional[str] = None,
+    data_inicio: Optional[date] = None,
+    data_fim: Optional[date] = None,
+    limite: int = 100,
+) -> list[dict[str, Any]]:
+    """
+    Retorna a lista de agendamentos de vendas com filtros opcionais por safra/cultura, status e data.
+    """
+    garantir_tabela_agendamentos()
+    conn = obter_conexao()
+    try:
+        with conn.cursor() as cursor:
+            filtro = "WHERE 1=1"
+            params: list[Any] = []
+            if safra_id is not None:
+                filtro += " AND a.safra_id = %s"
+                params.append(safra_id)
+            if status is not None and status != "todos":
+                filtro += " AND a.status = %s"
+                params.append(status)
+            if data_inicio and data_fim:
+                filtro += " AND a.data_prevista >= %s AND a.data_prevista <= %s"
+                params.extend([data_inicio, data_fim])
+            params.append(limite)
+
+            query = f"""
+                SELECT 
+                    a.id,
+                    a.safra_id,
+                    a.cliente_nome,
+                    COALESCE(a.cliente_telefone, ''),
+                    a.data_prevista,
+                    a.quantidade_sacas,
+                    a.preco_estimado_saca,
+                    a.valor_total_estimado,
+                    a.status,
+                    COALESCE(a.local_entrega, ''),
+                    COALESCE(a.motorista_placa, ''),
+                    COALESCE(a.valor_adiantamento, 0),
+                    COALESCE(a.observacoes, ''),
+                    a.carga_id,
+                    cul.nome AS cultura_nome
+                FROM agendamentos_vendas a
+                INNER JOIN safras s ON a.safra_id = s.id
+                INNER JOIN culturas cul ON s.cultura_id = cul.id
+                {filtro}
+                ORDER BY a.data_prevista ASC, a.id ASC
+                LIMIT %s;
+            """
+            cursor.execute(query, tuple(params))
+            linhas = cursor.fetchall()
+
+            status_rotulos = {
+                "pendente": "🟡 Pendente",
+                "confirmado": "🔵 Confirmado",
+                "concluido": "🟢 Concluído",
+                "cancelado": "❌ Cancelado",
+            }
+
+            return [
+                {
+                    "id": l[0],
+                    "safra_id": l[1],
+                    "cliente_nome": l[2],
+                    "cliente_telefone": l[3],
+                    "data_prevista": l[4],
+                    "quantidade_sacas": float(l[5]),
+                    "preco_estimado_saca": float(l[6]),
+                    "valor_total_estimado": float(l[7]),
+                    "status": l[8],
+                    "status_rotulo": status_rotulos.get(l[8], l[8]),
+                    "local_entrega": l[9],
+                    "motorista_placa": l[10],
+                    "valor_adiantamento": float(l[11]),
+                    "observacoes": l[12],
+                    "carga_id": l[13],
+                    "cultura_nome": l[14],
+                    "icone": ICONES_CULTURAS.get(l[14], "🌾"),
+                }
+                for l in linhas
+            ]
+    finally:
+        conn.close()
+
+
+@st.cache_data(ttl=30)
+def obter_resumo_agenda() -> dict[str, Any]:
+    """
+    Retorna métricas consolidadas dos agendamentos em aberto (pendentes ou confirmados).
+    """
+    garantir_tabela_agendamentos()
+    conn = obter_conexao()
+    try:
+        with conn.cursor() as cursor:
+            cursor.execute(
+                """
+                SELECT
+                    COALESCE(SUM(CASE WHEN status IN ('pendente', 'confirmado') THEN quantidade_sacas ELSE 0 END), 0) AS sacas_abertas,
+                    COALESCE(SUM(CASE WHEN status IN ('pendente', 'confirmado') THEN valor_total_estimado ELSE 0 END), 0) AS faturamento_previsto,
+                    COALESCE(SUM(CASE WHEN status IN ('pendente', 'confirmado') THEN valor_adiantamento ELSE 0 END), 0) AS total_adiantamento,
+                    COALESCE(COUNT(CASE WHEN status IN ('pendente', 'confirmado') AND data_prevista BETWEEN CURRENT_DATE AND CURRENT_DATE + INTERVAL '7 days' THEN 1 END), 0) AS proximos_7_dias,
+                    COALESCE(COUNT(CASE WHEN status IN ('pendente', 'confirmado') THEN 1 END), 0) AS total_abertos
+                FROM agendamentos_vendas;
+                """
+            )
+            row = cursor.fetchone()
+            return {
+                "sacas_abertas": float(row[0]),
+                "faturamento_previsto": float(row[1]),
+                "total_adiantamento": float(row[2]),
+                "proximos_7_dias": int(row[3]),
+                "total_abertos": int(row[4]),
+            }
+    finally:
+        conn.close()
+
 
 
