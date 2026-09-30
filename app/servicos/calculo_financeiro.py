@@ -1,9 +1,11 @@
 from datetime import date
 from typing import Any, Optional
+import streamlit as st
 
 from app.database.conexao import obter_conexao
 
 
+@st.cache_data(ttl=30)
 def obter_resumo_financeiro_safra(
     safra_id: Optional[int] = None,
     data_inicio: Optional[date] = None,
@@ -121,6 +123,7 @@ def obter_resumo_financeiro_safra(
         conn.close()
 
 
+@st.cache_data(ttl=30)
 def obter_vendas_por_cultura(
     data_inicio: Optional[date] = None,
     data_fim: Optional[date] = None,
@@ -172,6 +175,7 @@ def obter_vendas_por_cultura(
         conn.close()
 
 
+@st.cache_data(ttl=60)
 def obter_historico_precos_cultura(cultura_id: int) -> list[dict[str, Any]]:
     """
     Retorna o histórico de preços por saca de uma cultura ordenado por data.

@@ -1,7 +1,15 @@
 from datetime import date
 from typing import Any, Optional
 
+import streamlit as st
 from app.database.conexao import obter_conexao
+
+
+def limpar_cache_dados() -> None:
+    try:
+        st.cache_data.clear()
+    except Exception:
+        pass
 
 
 CULTURAS_PADRAO = [
@@ -29,6 +37,7 @@ ICONES_CULTURAS = {
 }
 
 
+@st.cache_data(ttl=3600)
 def garantir_culturas_padrao() -> None:
     """
     Garante que todas as culturas comerciais padrão existam no banco
@@ -72,6 +81,7 @@ def garantir_culturas_padrao() -> None:
         conn.close()
 
 
+@st.cache_data(ttl=120)
 def listar_safras_ativas() -> list[dict[str, Any]]:
     """
     Retorna a lista de culturas/produtos comerciais ativos no banco,
@@ -153,11 +163,13 @@ def salvar_carga(
             carga_id = cursor.fetchone()[0]
 
             conn.commit()
+            limpar_cache_dados()
             return carga_id
     finally:
         conn.close()
 
 
+@st.cache_data(ttl=30)
 def listar_ultimas_cargas(
     safra_id: Optional[int] = None,
     limite: int = 50,
@@ -252,6 +264,7 @@ def criar_safra_rapida(nome_cultura: str, data_inicio: date) -> int:
             safra_id = cursor.fetchone()[0]
 
             conn.commit()
+            limpar_cache_dados()
             return safra_id
     finally:
         conn.close()
@@ -277,11 +290,13 @@ def salvar_custo(safra_id: int, descricao: str, valor: float, data_custo: date) 
             )
             custo_id = cursor.fetchone()[0]
             conn.commit()
+            limpar_cache_dados()
             return custo_id
     finally:
         conn.close()
 
 
+@st.cache_data(ttl=30)
 def listar_ultimos_custos(
     safra_id: Optional[int] = None,
     limite: int = 50,
@@ -366,6 +381,7 @@ def listar_ultimos_custos(
 # -----------------------------------------------------------------------------
 # OPERAÇÕES DE TRABALHADORES & DIÁRIAS (Mão de obra)
 # -----------------------------------------------------------------------------
+@st.cache_data(ttl=60)
 def listar_trabalhadores() -> list[dict[str, Any]]:
     """
     Retorna a lista de todos os trabalhadores cadastrados.
@@ -400,6 +416,7 @@ def cadastrar_trabalhador(nome: str, tipo_pagamento: str = "diaria") -> int:
             )
             trabalhador_id = cursor.fetchone()[0]
             conn.commit()
+            limpar_cache_dados()
             return trabalhador_id
     finally:
         conn.close()
@@ -427,11 +444,13 @@ def salvar_pagamento_trabalhador(
             )
             pagamento_id = cursor.fetchone()[0]
             conn.commit()
+            limpar_cache_dados()
             return pagamento_id
     finally:
         conn.close()
 
 
+@st.cache_data(ttl=30)
 def listar_ultimos_pagamentos(
     safra_id: Optional[int] = None,
     limite: int = 50,
@@ -511,11 +530,13 @@ def salvar_movimentacao_estoque(
             )
             mov_id = cursor.fetchone()[0]
             conn.commit()
+            limpar_cache_dados()
             return mov_id
     finally:
         conn.close()
 
 
+@st.cache_data(ttl=30)
 def listar_movimentacoes_estoque(
     safra_id: Optional[int] = None,
     tipo: Optional[str] = None,
@@ -587,6 +608,7 @@ def listar_movimentacoes_estoque(
         conn.close()
 
 
+@st.cache_data(ttl=30)
 def obter_resumo_estoque(safra_id: Optional[int] = None) -> list[dict[str, Any]]:
     """
     Calcula o saldo de estoque atual por cultura:
@@ -680,6 +702,7 @@ def limpar_dados_teste() -> dict[str, int]:
             cursor.execute("DELETE FROM precos;")
             precos_del = cursor.rowcount
             conn.commit()
+            limpar_cache_dados()
             return {
                 "estoque": estoque_del,
                 "cargas": cargas_del,

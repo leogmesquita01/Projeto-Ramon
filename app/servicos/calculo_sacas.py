@@ -1,9 +1,11 @@
 from datetime import date
 from typing import Any, Optional
+import streamlit as st
 
 from app.database.conexao import obter_conexao
 
 
+@st.cache_data(ttl=30)
 def obter_resumo_sacas_safra(
     safra_id: Optional[int] = None,
     data_inicio: Optional[date] = None,
@@ -51,6 +53,7 @@ def obter_resumo_sacas_safra(
         conn.close()
 
 
+@st.cache_data(ttl=30)
 def obter_total_sacas_por_cultura() -> list[dict[str, Any]]:
     """
     Retorna o volume total de sacas acumulado agrupado por cultura.
