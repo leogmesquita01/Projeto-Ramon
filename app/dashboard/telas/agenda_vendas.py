@@ -4,15 +4,7 @@ from typing import Any, Optional
 import urllib.parse
 
 import streamlit as st
-from app.servicos.dados import (
-    atualizar_status_agendamento,
-    efetivar_agendamento_como_carga,
-    excluir_agendamento,
-    listar_agendamentos,
-    obter_resumo_agenda,
-    obter_resumo_estoque,
-    salvar_agendamento,
-)
+from app.servicos import dados
 
 
 def _formatar_link_whatsapp(telefone: str, cliente_nome: str, cultura_nome: str) -> Optional[str]:
@@ -63,7 +55,7 @@ def renderizar_tela_agenda_vendas(
 
     # 1. MÉTRICAS CONSOLIDADAS NO TOPO
     try:
-        resumo_agenda = obter_resumo_agenda()
+        resumo_agenda = dados.obter_resumo_agenda()
     except Exception as e:
         st.error(f"Erro ao carregar métricas da agenda: {e}")
         resumo_agenda = {
@@ -187,7 +179,7 @@ def renderizar_tela_agenda_vendas(
             data_fim_filtro = proximo_mes - timedelta(days=1)
 
         try:
-            agendamentos = listar_agendamentos(
+            agendamentos = dados.listar_agendamentos(
                 safra_id=safra_id_filtro,
                 status=status_db,
                 data_inicio=data_ini_filtro,
@@ -350,7 +342,7 @@ def renderizar_tela_agenda_vendas(
                                     type="primary",
                                 ):
                                     try:
-                                        carga_criada_id = efetivar_agendamento_como_carga(
+                                        carga_criada_id = dados.efetivar_agendamento_como_carga(
                                             agendamento_id=item["id"],
                                             data_carga=dt_real,
                                             quantidade_sacas=qtd_real,
@@ -364,12 +356,12 @@ def renderizar_tela_agenda_vendas(
                             # Ação 2: Confirmar se estava pendente
                             if item["status"] == "pendente":
                                 if st.button("🔵 Marcar Confirmado", key=f"btn_conf_{item['id']}", use_container_width=True):
-                                    atualizar_status_agendamento(item["id"], "confirmado")
+                                    dados.atualizar_status_agendamento(item["id"], "confirmado")
                                     st.rerun()
 
                             # Ação 3: Cancelar
                             if st.button("❌ Cancelar Pedido", key=f"btn_canc_{item['id']}", use_container_width=True):
-                                atualizar_status_agendamento(item["id"], "cancelado")
+                                dados.atualizar_status_agendamento(item["id"], "cancelado")
                                 st.rerun()
 
                         elif item["status"] == "concluido":
@@ -386,19 +378,19 @@ def renderizar_tela_agenda_vendas(
                                 )
                             # Permitir reabrir se necessário
                             if st.button("🔄 Reabrir Pedido", key=f"btn_reabrir_{item['id']}", use_container_width=True):
-                                atualizar_status_agendamento(item["id"], "pendente")
+                                dados.atualizar_status_agendamento(item["id"], "pendente")
                                 st.rerun()
 
                         elif item["status"] == "cancelado":
                             if st.button("🔄 Reativar Pedido", key=f"btn_reativar_{item['id']}", use_container_width=True):
-                                atualizar_status_agendamento(item["id"], "pendente")
+                                dados.atualizar_status_agendamento(item["id"], "pendente")
                                 st.rerun()
 
                         # Excluir agendamento com confirmação
                         with st.popover("🗑️ Excluir", use_container_width=True):
                             st.caption("Deseja apagar este agendamento do histórico?")
                             if st.button("Sim, apagar registro", key=f"btn_del_{item['id']}", type="primary"):
-                                excluir_agendamento(item["id"])
+                                dados.excluir_agendamento(item["id"])
                                 st.rerun()
 
     # -------------------------------------------------------------------------
@@ -433,7 +425,7 @@ def renderizar_tela_agenda_vendas(
                 # Saldo disponível em estoque para essa cultura
                 saldo_disponivel = 0.0
                 try:
-                    resumo_est = obter_resumo_estoque(safra_id=safra_selecionada["id"])
+                    resumo_est = dados.obter_resumo_estoque(safra_id=safra_selecionada["id"])
                     if resumo_est:
                         saldo_disponivel = resumo_est[0]["saldo_disponivel"]
                         if saldo_disponivel > 0:
@@ -553,7 +545,7 @@ def renderizar_tela_agenda_vendas(
                 st.error("Por favor, preencha o nome do comprador.")
             else:
                 try:
-                    agendamento_id = salvar_agendamento(
+                    agendamento_id = dados.salvar_agendamento(
                         safra_id=safra_selecionada["id"],
                         cliente_nome=cliente_nome,
                         data_prevista=data_prevista,

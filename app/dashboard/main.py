@@ -4,9 +4,17 @@ import sys
 # Garante que o diretório raiz do projeto esteja no caminho de busca de módulos
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
 
+import importlib
 import streamlit as st
 
 from app.dashboard.estilos import aplicar_estilos
+
+import app.servicos.dados as dados_service
+try:
+    importlib.reload(dados_service)
+except Exception:
+    pass
+
 from app.servicos.dados import listar_safras_ativas, obter_resumo_estoque
 
 from app.dashboard.telas.agenda_vendas import renderizar_tela_agenda_vendas
