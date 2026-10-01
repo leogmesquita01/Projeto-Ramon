@@ -7,13 +7,14 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../.
 import streamlit as st
 
 from app.dashboard.estilos import aplicar_estilos
+from app.servicos.dados import listar_safras_ativas, obter_resumo_estoque
+
 from app.dashboard.telas.agenda_vendas import renderizar_tela_agenda_vendas
 from app.dashboard.telas.cargas import renderizar_tela_cargas
 from app.dashboard.telas.custos import renderizar_tela_custos
 from app.dashboard.telas.estoque import renderizar_tela_estoque
 from app.dashboard.telas.meu_bolso import renderizar_tela_meu_bolso
 from app.dashboard.telas.trabalhadores import renderizar_tela_trabalhadores
-from app.servicos.dados import listar_safras_ativas, obter_resumo_estoque
 
 # -----------------------------------------------------------------------------
 # 1. CONFIGURAÇÃO DA PÁGINA

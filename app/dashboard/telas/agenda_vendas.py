@@ -1,6 +1,6 @@
 import re
 from datetime import date, timedelta
-from typing import Any
+from typing import Any, Optional
 import urllib.parse
 
 import streamlit as st
@@ -15,7 +15,7 @@ from app.servicos.dados import (
 )
 
 
-def _formatar_link_whatsapp(telefone: str, cliente_nome: str, cultura_nome: str) -> str | None:
+def _formatar_link_whatsapp(telefone: str, cliente_nome: str, cultura_nome: str) -> Optional[str]:
     """
     Formata link direto para o WhatsApp do cliente com mensagem pré-preenchida.
     """
