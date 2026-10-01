@@ -51,31 +51,32 @@ except Exception as e:
 opcoes_safras = {s["rotulo"]: s for s in safras} if safras else {}
 
 # -----------------------------------------------------------------------------
-# 4. BARRA LATERAL (MENU DE NAVEGAÇÃO E IDENTIDADE)
+# 4. BARRA LATERAL (MENU DE NAVEGAÇÃO E IDENTIDADE ESTILO DEVLEADS)
 # -----------------------------------------------------------------------------
 with st.sidebar:
     st.markdown(
         """
-        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 0.5rem;">
-            <span style="font-size: 2rem;">🌾</span>
+        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 1.2rem; padding-bottom: 0.8rem; border-bottom: 1px solid rgba(255, 255, 255, 0.08);">
+            <div style="width: 38px; height: 38px; border-radius: 10px; background: rgba(184, 242, 45, 0.12); border: 1.5px solid #B8F22D; display: flex; align-items: center; justify-content: center; font-size: 1.25rem;">
+                🌾
+            </div>
             <div>
-                <h2 style="margin: 0; font-size: 1.35rem; color: #34D399; font-weight: 800;">AgroGestão</h2>
-                <span style="font-size: 0.8rem; color: #94A3B8;">Controle do Campo & Vendas</span>
+                <div style="font-family: 'Montserrat', sans-serif; font-size: 1.22rem; font-weight: 900; letter-spacing: -0.5px; color: #FFFFFF; line-height: 1.1;">
+                    Agro<span style="color: #B8F22D;">Gestão</span>
+                </div>
+                <div style="font-family: 'JetBrains Mono', monospace; font-size: 0.65rem; color: #71717A; text-transform: uppercase; letter-spacing: 0.8px; margin-top: 2px;">
+                    Central da Lavoura
+                </div>
             </div>
         </div>
         """,
         unsafe_allow_html=True,
     )
-    st.divider()
 
-    st.markdown(
-        "<p style='font-size: 0.85rem; font-weight: 700; color: #94A3B8; text-transform: uppercase;'>Navegação</p>",
-        unsafe_allow_html=True,
-    )
     menu = st.radio(
-        "Ir para a tela:",
+        "Navegação:",
         [
-            "💰 Meu Bolso",
+            "📊 Visão Geral (Meu Bolso)",
             "📅 Agenda de Vendas",
             "📦 Controle de Estoque",
             "🚛 Carga do Caminhão",
@@ -85,44 +86,84 @@ with st.sidebar:
         label_visibility="collapsed",
     )
 
-    st.divider()
-    st.markdown(
-        "<p style='font-size: 0.8rem; font-weight: 700; color: #94A3B8; text-transform: uppercase; letter-spacing: 0.5px;'>Disponível em Estoque</p>",
-        unsafe_allow_html=True,
-    )
+    # Cartão de Estoque do Galpão (Estilo DevLeads "Limite do Plano")
     try:
         resumo_sidebar = obter_resumo_estoque()
         com_estoque = [c for c in resumo_sidebar if c["saldo_disponivel"] > 0]
+        total_sacas_estoque = sum(c["saldo_disponivel"] for c in com_estoque)
+
         if com_estoque:
-            badges_html = "".join([
+            linhas_itens = "".join([
                 f"""
-                <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.2); border-radius: 8px; padding: 5px 10px; margin-bottom: 5px;">
-                    <span style="font-size: 0.85rem; color: #F8FAFC; font-weight: 600;">{c['icone']} {c['cultura_nome']}</span>
-                    <span style="font-size: 0.8rem; font-weight: 700; color: #34D399;">{int(c['saldo_disponivel']):,} sc</span>
+                <div style="display: flex; justify-content: space-between; align-items: center; padding: 4px 0; border-bottom: 1px solid rgba(255, 255, 255, 0.04);">
+                    <span style="font-size: 0.82rem; color: #A1A1AA; font-weight: 500;">{c['icone']} {c['cultura_nome']}</span>
+                    <span style="font-family: 'JetBrains Mono', monospace; font-size: 0.78rem; font-weight: 700; color: #B8F22D;">{int(c['saldo_disponivel']):,} sc</span>
                 </div>
                 """
-                for c in com_estoque
+                for c in com_estoque[:5]
             ])
-            st.markdown(badges_html, unsafe_allow_html=True)
+            st.markdown(
+                f"""
+                <div style="background: #0E0E0E; border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 14px; padding: 12px; margin-top: 1.5rem;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                        <span style="font-family: 'JetBrains Mono', monospace; font-size: 0.68rem; font-weight: 700; color: #71717A; text-transform: uppercase; letter-spacing: 0.6px;">
+                            Disponível no Galpão
+                        </span>
+                        <span style="font-family: 'JetBrains Mono', monospace; font-size: 0.72rem; color: #B8F22D; font-weight: 700;">
+                            {int(total_sacas_estoque):,} sc
+                        </span>
+                    </div>
+                    {linhas_itens}
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
         else:
-            st.caption("⚪ Nenhum produto com saldo no galpão.")
+            st.markdown(
+                """
+                <div style="background: #0E0E0E; border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 14px; padding: 12px; margin-top: 1.5rem; text-align: center;">
+                    <span style="font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; color: #71717A;">
+                        ⚪ Nenhum saldo no galpão
+                    </span>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
     except Exception:
-        st.caption("⚪ Nenhum produto com saldo no galpão.")
+        pass
 
-    st.caption("🔒 Conectado com segurança ao Supabase")
+    # Perfil do Usuário no rodapé da Sidebar (Estilo DevLeads)
+    st.markdown(
+        """
+        <div style="margin-top: 1.2rem; padding: 10px 12px; background: #0E0E0E; border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 12px; display: flex; align-items: center; gap: 10px;">
+            <div style="width: 34px; height: 34px; border-radius: 50%; background: #18181B; border: 1.5px solid #B8F22D; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: 800; color: #B8F22D; font-family: 'JetBrains Mono', monospace;">
+                LM
+            </div>
+            <div style="flex: 1; min-width: 0;">
+                <div style="font-size: 0.85rem; font-weight: 700; color: #FFFFFF; line-height: 1.2;">
+                    Leonardo Mesquita
+                </div>
+                <div style="font-size: 0.65rem; font-weight: 700; color: #B8F22D; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 2px;">
+                    Produtor • Conectado
+                </div>
+            </div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
 
 # -----------------------------------------------------------------------------
 # 5. ROTEAMENTO DAS TELAS
 # -----------------------------------------------------------------------------
-if menu == "💰 Meu Bolso":
+if "Meu Bolso" in menu:
     renderizar_tela_meu_bolso(safras, opcoes_safras)
-elif menu == "📅 Agenda de Vendas":
+elif "Agenda" in menu:
     renderizar_tela_agenda_vendas(safras, opcoes_safras)
-elif menu == "📦 Controle de Estoque":
+elif "Estoque" in menu:
     renderizar_tela_estoque(safras, opcoes_safras)
-elif menu == "🚛 Carga do Caminhão":
+elif "Carga" in menu:
     renderizar_tela_cargas(safras, opcoes_safras)
-elif menu == "👷 Trabalhadores & Diárias":
+elif "Trabalhadores" in menu:
     renderizar_tela_trabalhadores(safras, opcoes_safras)
-elif menu == "💸 Custos & Insumos":
+elif "Custos" in menu:
     renderizar_tela_custos(safras, opcoes_safras)
