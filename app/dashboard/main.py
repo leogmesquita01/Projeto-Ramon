@@ -16,6 +16,7 @@ except Exception:
     pass
 
 from app.servicos.dados import listar_safras_ativas, obter_resumo_estoque
+from app.servicos.calculo_financeiro import obter_resumo_financeiro_safra
 
 from app.dashboard.telas.agenda_vendas import renderizar_tela_agenda_vendas
 from app.dashboard.telas.cargas import renderizar_tela_cargas
@@ -104,6 +105,17 @@ with st.sidebar:
     capacidade_total = 2000
     pct_estoque = min(100, int((total_sacas_estoque / capacidade_total) * 100)) if total_sacas_estoque > 0 else 5
 
+    # Cálculo dinâmico da Meta de Vendas para lucro de R$ 5.000,00
+    try:
+        resumo_fin = obter_resumo_financeiro_safra()
+        lucro_atual = max(0.0, float(resumo_fin.get("lucro_liquido", 0.0)))
+    except Exception:
+        lucro_atual = 0.0
+
+    meta_lucro = 5000.0
+    pct_meta = min(100.0, (lucro_atual / meta_lucro) * 100.0)
+    largura_barra_meta = max(4, int(pct_meta)) if pct_meta > 0 else 2
+
     card_html = (
         '<div style="background: #111113; border: 1px solid rgba(255, 255, 255, 0.07); border-radius: 16px; padding: 14px 15px; margin-bottom: 1.5rem;">'
         '<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">'
@@ -114,11 +126,11 @@ with st.sidebar:
         f'<div style="width: {pct_estoque}%; height: 100%; background: #B8F22D; border-radius: 2px; box-shadow: 0 0 8px rgba(184, 242, 45, 0.5);"></div>'
         '</div>'
         '<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">'
-        '<span style="font-family: \'Manrope\', sans-serif; font-size: 0.8rem; color: #8E8E93; font-weight: 500;">Cargas no Mês</span>'
-        '<span style="font-family: \'JetBrains Mono\', monospace; font-size: 0.78rem; color: #F4F4F5; font-weight: 600;">14 / 20</span>'
+        '<span style="font-family: \'Manrope\', sans-serif; font-size: 0.8rem; color: #8E8E93; font-weight: 500;">Meta de Vendas</span>'
+        f'<span style="font-family: \'JetBrains Mono\', monospace; font-size: 0.78rem; color: #F4F4F5; font-weight: 600;">{int(pct_meta)}%</span>'
         '</div>'
         '<div style="width: 100%; height: 4px; background: #222226; border-radius: 2px; margin-bottom: 13px; overflow: hidden;">'
-        '<div style="width: 70%; height: 100%; background: #B8F22D; border-radius: 2px;"></div>'
+        f'<div style="width: {largura_barra_meta}%; height: 100%; background: #B8F22D; border-radius: 2px; box-shadow: 0 0 8px rgba(184, 242, 45, 0.4);"></div>'
         '</div>'
         '<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">'
         '<span style="font-family: \'Manrope\', sans-serif; font-size: 0.8rem; color: #8E8E93; font-weight: 500;">IA AgroGestão</span>'
