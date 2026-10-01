@@ -185,7 +185,7 @@ def renderizar_tela_meu_bolso(
                 f"""
                 <div class="agro-card">
                     <span style="color: #94A3B8; font-size: 0.85rem; font-weight: 600; text-transform: uppercase;">🌾 Volume Vendido</span>
-                    <h2 style="color: #34D399; margin: 0.4rem 0 0 0; font-size: 1.6rem;">{total_sacas_periodo} sacas</h2>
+                    <h2 style="color: #34D399; margin: 0.4rem 0 0 0; font-size: 1.6rem;">{total_sacas_periodo} sacos</h2>
                     <span style="color: #64748B; font-size: 0.8rem;">{total_cargas_periodo} caminhão(ões)</span>
                 </div>
                 """,
@@ -218,7 +218,7 @@ def renderizar_tela_meu_bolso(
                                     R$ {vc['total_valor']:,.2f}
                                 </h3>
                                 <p style="color: #94A3B8; margin: 0.3rem 0 0 0; font-size: 0.85rem;">
-                                    <strong>{vc['total_sacas']}</strong> sacas em <strong>{vc['total_cargas']}</strong> caminhão(ões)
+                                    <strong>{vc['total_sacas']}</strong> sacos em <strong>{vc['total_cargas']}</strong> caminhão(ões)
                                 </p>
                             </div>
                             """,
@@ -251,8 +251,8 @@ def renderizar_tela_meu_bolso(
                     "Data": c["data"].strftime("%d/%m/%Y") if hasattr(c["data"], "strftime") else str(c["data"]),
                     "Operação": c.get("tipo_rotulo", "🟢 Venda"),
                     "Produto": f"{c.get('icone', '🌾')} {c.get('cultura_nome', '')}",
-                    "Total de Sacas": f"{int(c['quantidade_sacas'])} sacas" if c.get("quantidade_sacas", 0) > 0 else "Carrada Fechada",
-                    "Preço / Valor": f"R$ {c['valor_por_saca']:,.2f}/sc" if c.get("quantidade_sacas", 0) > 0 else f"R$ {c['valor_total']:,.2f}",
+                    "Total de Sacos": f"{int(c['quantidade_sacas'])} sacos" if c.get("quantidade_sacas", 0) > 0 else "Carrada Fechada",
+                    "Preço / Valor": f"R$ {c['valor_por_saca']:,.2f}/saco" if c.get("quantidade_sacas", 0) > 0 else f"R$ {c['valor_total']:,.2f}",
                     "Valor Total": f"R$ {c['valor_total']:,.2f}",
                 }
                 for c in cargas_do_periodo

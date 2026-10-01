@@ -71,9 +71,9 @@ def renderizar_tela_agenda_vendas(
         st.markdown(
             f"""
             <div class="agro-card" style="border: 2px solid #10B981;">
-                <span style="color: #34D399; font-size: 0.82rem; font-weight: 700; text-transform: uppercase;">📦 Sacas Comprometidas</span>
+                <span style="color: #34D399; font-size: 0.82rem; font-weight: 700; text-transform: uppercase;">📦 Sacos Comprometidos</span>
                 <h2 style="color: #F8FAFC; margin: 0.4rem 0 0 0; font-size: 1.75rem; font-weight: 800;">
-                    {int(resumo_agenda['sacas_abertas']):,} sacas
+                    {int(resumo_agenda['sacas_abertas']):,} sacos
                 </h2>
                 <span style="color: #A7F3D0; font-size: 0.8rem;">{resumo_agenda['total_abertos']} pedidos em aberto</span>
             </div>
@@ -275,10 +275,10 @@ def renderizar_tela_agenda_vendas(
                             <div style="background: rgba(16, 185, 129, 0.05); border: 1px solid rgba(16, 185, 129, 0.2); border-radius: 12px; padding: 12px;">
                                 <div style="font-size: 0.82rem; color: #94A3B8; text-transform: uppercase; font-weight: 700;">Volume & Preço</div>
                                 <div style="font-size: 1.15rem; color: #F8FAFC; font-weight: 800; margin: 2px 0;">
-                                    {int(item['quantidade_sacas']):,} sacas
+                                    {int(item['quantidade_sacas']):,} sacos
                                 </div>
                                 <div style="font-size: 0.85rem; color: #A7F3D0;">
-                                    a R$ {item['preco_estimado_saca']:,.2f} / saca
+                                    a R$ {item['preco_estimado_saca']:,.2f} / saco
                                 </div>
                                 <div style="border-top: 1px solid rgba(255,255,255,0.08); margin: 6px 0; padding-top: 6px;">
                                     <span style="font-size: 0.82rem; color: #94A3B8;">Total Previsto:</span>
@@ -318,7 +318,7 @@ def renderizar_tela_agenda_vendas(
                                     key=f"dt_efet_{item['id']}",
                                 )
                                 qtd_real = st.number_input(
-                                    "Quantidade Real Carregada (Sacas):",
+                                    "Quantidade Real Carregada (Sacos):",
                                     min_value=1,
                                     max_value=100000,
                                     value=int(item["quantidade_sacas"]),
@@ -326,7 +326,7 @@ def renderizar_tela_agenda_vendas(
                                     key=f"qtd_efet_{item['id']}",
                                 )
                                 preco_real = st.number_input(
-                                    "Preço Final por Saca (R$):",
+                                    "Preço Final por Saco (R$):",
                                     min_value=0.10,
                                     max_value=5000.0,
                                     value=float(item["preco_estimado_saca"]),
@@ -429,9 +429,9 @@ def renderizar_tela_agenda_vendas(
                     if resumo_est:
                         saldo_disponivel = resumo_est[0]["saldo_disponivel"]
                         if saldo_disponivel > 0:
-                            st.caption(f"📦 **Estoque disponível no galpão:** :green[{int(saldo_disponivel)} sacas]")
+                            st.caption(f"📦 **Estoque disponível no galpão:** :green[{int(saldo_disponivel)} sacos]")
                         else:
-                            st.caption("📦 **Estoque disponível no galpão:** :orange[0 sacas registradas]")
+                            st.caption("📦 **Estoque disponível no galpão:** :orange[0 sacos registrados]")
                 except Exception:
                     pass
 
@@ -444,7 +444,7 @@ def renderizar_tela_agenda_vendas(
                 col_qtd, col_prc = st.columns(2)
                 with col_qtd:
                     qtd_sacas = st.number_input(
-                        "📦 Quantidade Prevista (Sacas):",
+                        "📦 Quantidade Prevista (Sacos):",
                         min_value=1,
                         max_value=100000,
                         value=50,
@@ -452,7 +452,7 @@ def renderizar_tela_agenda_vendas(
                     )
                 with col_prc:
                     preco_saca = st.number_input(
-                        "🏷️ Preço Combinado por Saca (R$):",
+                        "🏷️ Preço Combinado por Saco (R$):",
                         min_value=0.50,
                         max_value=5000.0,
                         value=40.0,
@@ -486,7 +486,7 @@ def renderizar_tela_agenda_vendas(
                     )
                     observacoes = st.text_area(
                         "📝 Observações / Condições Comerciais:",
-                        placeholder="Ex: Sacaria limpa padrão 60kg, pagamento do restante à vista na pesagem.",
+                        placeholder="Ex: Sacos limpos padrão 60kg, pagamento do restante à vista na pesagem.",
                     )
 
                 btn_salvar_agendamento = st.button("💾 Gravar Agendamento de Venda", type="primary")
@@ -504,7 +504,7 @@ def renderizar_tela_agenda_vendas(
                     </h1>
                     <div style="background: rgba(0,0,0,0.25); border-radius: 10px; padding: 0.6rem; display: inline-block; margin-top: 0.3rem;">
                         <span style="color: #CBD5E1; font-size: 1.05rem;">
-                            <strong>{produto_rotulo}</strong>: <strong>{qtd_sacas}</strong> sacas × <strong>R$ {preco_saca:,.2f}</strong>/sc
+                            <strong>{produto_rotulo}</strong>: <strong>{qtd_sacas}</strong> sacos × <strong>R$ {preco_saca:,.2f}</strong>/saco
                         </span>
                     </div>
                 </div>
@@ -515,12 +515,12 @@ def renderizar_tela_agenda_vendas(
             # Cartão de conferência com estoque
             if saldo_disponivel < qtd_sacas:
                 st.warning(
-                    f"⚠️ **Atenção ao Estoque:** O pedido prevê **{qtd_sacas} sacas**, mas o galpão tem atualmente **{int(saldo_disponivel)} sacas**. "
+                    f"⚠️ **Atenção ao Estoque:** O pedido prevê **{qtd_sacas} sacos**, mas o galpão tem atualmente **{int(saldo_disponivel)} sacos**. "
                     "Certifique-se de colher ou adquirir o complemento até a data do carregamento!"
                 )
             else:
                 st.success(
-                    f"✅ **Estoque suficiente:** O galpão tem **{int(saldo_disponivel)} sacas**, o que atende tranquilamente este pedido."
+                    f"✅ **Estoque suficiente:** O galpão tem **{int(saldo_disponivel)} sacos**, o que atende tranquilamente este pedido."
                 )
 
             # Resumo do adiantamento

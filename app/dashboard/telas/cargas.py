@@ -61,9 +61,9 @@ def renderizar_tela_cargas(
                     resumo_est_prod = obter_resumo_estoque(safra_id=safra_da_carga["id"])
                     saldo_prod = int(resumo_est_prod[0]["saldo_disponivel"]) if resumo_est_prod else 0
                     if saldo_prod > 0:
-                        st.caption(f"📦 **Estoque disponível no galpão:** :green[{saldo_prod} sacas]")
+                        st.caption(f"📦 **Estoque disponível no galpão:** :green[{saldo_prod} sacos]")
                     else:
-                        st.caption("📦 **Estoque no galpão:** :orange[0 sacas registradas]")
+                        st.caption("📦 **Estoque no galpão:** :orange[0 sacos registrados]")
             except Exception:
                 pass
 
@@ -75,20 +75,20 @@ def renderizar_tela_cargas(
 
             if eh_venda:
                 qtd_sacas = st.number_input(
-                    "📦 Quantidade de Sacas (Inteiras):",
+                    "📦 Quantidade de Sacos (Inteiros):",
                     min_value=1,
                     max_value=100000,
                     value=50,
                     step=1,
-                    help="Número total de sacas cheias carregadas no caminhão",
+                    help="Número total de sacos cheios carregados no caminhão",
                 )
                 preco_saca = st.number_input(
-                    "🏷️ Preço Combinado de Venda por Saca (R$):",
+                    "🏷️ Preço Combinado de Venda por Saco (R$):",
                     min_value=0.0,
                     max_value=5000.0,
                     value=40.0,
                     step=0.50,
-                    help="Preço acordado para a venda de cada saca",
+                    help="Preço acordado para a venda de cada saco",
                 )
                 valor_total_calculado = qtd_sacas * preco_saca
             else:
@@ -118,7 +118,7 @@ def renderizar_tela_cargas(
                     </h1>
                     <div style="background: rgba(0,0,0,0.25); border-radius: 10px; padding: 0.6rem; display: inline-block; margin-top: 0.3rem;">
                         <span style="color: #CBD5E1; font-size: 1.05rem;">
-                            <strong>{produto_carga_rotulo}</strong>: <strong>{qtd_sacas}</strong> sacas × <strong>R$ {preco_saca:,.2f}</strong>/saca
+                            <strong>{produto_carga_rotulo}</strong>: <strong>{qtd_sacas}</strong> sacos × <strong>R$ {preco_saca:,.2f}</strong>/saco
                         </span>
                     </div>
                 </div>
@@ -157,7 +157,7 @@ def renderizar_tela_cargas(
             )
             if eh_venda:
                 st.success(
-                    f"✅ Venda #{carga_id} salva! ({qtd_sacas} sacas = R$ {valor_total_calculado:,.2f})"
+                    f"✅ Venda #{carga_id} salva! ({qtd_sacas} sacos = R$ {valor_total_calculado:,.2f})"
                 )
             else:
                 st.success(
@@ -187,8 +187,8 @@ def renderizar_tela_cargas(
                     "Data": c["data"].strftime("%d/%m/%Y") if hasattr(c["data"], "strftime") else str(c["data"]),
                     "Operação": c.get("tipo_rotulo", "🟢 Venda"),
                     "Produto": f"{c.get('icone', '🌾')} {c.get('cultura_nome', '')}",
-                    "Total de Sacas": f"{int(c['quantidade_sacas'])} sacas" if c.get("quantidade_sacas", 0) > 0 else "Carrada Fechada",
-                    "Preço / Valor": f"R$ {c['valor_por_saca']:,.2f}/sc" if c.get("quantidade_sacas", 0) > 0 else f"R$ {c['valor_total']:,.2f}",
+                    "Total de Sacos": f"{int(c['quantidade_sacas'])} sacos" if c.get("quantidade_sacas", 0) > 0 else "Carrada Fechada",
+                    "Preço / Valor": f"R$ {c['valor_por_saca']:,.2f}/saco" if c.get("quantidade_sacas", 0) > 0 else f"R$ {c['valor_total']:,.2f}",
                     "Valor Total": f"R$ {c['valor_total']:,.2f}",
                 }
                 for c in ultimas_cargas

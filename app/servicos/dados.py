@@ -381,7 +381,7 @@ def listar_ultimos_custos(
                 SELECT 
                     car.id, 
                     CASE 
-                        WHEN car.quantidade_sacas > 0 THEN CONCAT('🚚 Compra de Caminhão (', CAST(car.quantidade_sacas AS INTEGER), ' sacas)')
+                        WHEN car.quantidade_sacas > 0 THEN CONCAT('🚚 Compra de Caminhão (', CAST(car.quantidade_sacas AS INTEGER), ' sacos)')
                         ELSE CONCAT('🚚 Compra de Caminhão / Carrada (', cul.nome, ')')
                     END, 
                     COALESCE(car.valor_total, p.valor_por_saca, 0), 

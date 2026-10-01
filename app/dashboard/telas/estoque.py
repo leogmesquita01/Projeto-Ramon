@@ -49,7 +49,7 @@ def renderizar_tela_estoque(
             <div class="agro-card" style="border: 2px solid #10B981;">
                 <span style="color: #34D399; font-size: 0.85rem; font-weight: 700; text-transform: uppercase;">📦 Saldo Geral Disponível</span>
                 <h2 style="color: #F8FAFC; margin: 0.4rem 0 0 0; font-size: 1.8rem; font-weight: 800;">
-                    {int(saldo_geral_disponivel):,} sacas
+                    {int(saldo_geral_disponivel):,} sacos
                 </h2>
                 <span style="color: #A7F3D0; font-size: 0.8rem;">Prontas para comercialização</span>
             </div>
@@ -62,7 +62,7 @@ def renderizar_tela_estoque(
             <div class="agro-card">
                 <span style="color: #94A3B8; font-size: 0.85rem; font-weight: 600; text-transform: uppercase;">📥 Entradas no Galpão</span>
                 <h2 style="color: #60A5FA; margin: 0.4rem 0 0 0; font-size: 1.6rem; font-weight: 800;">
-                    {int(total_geral_colhido + total_geral_compras):,} sacas
+                    {int(total_geral_colhido + total_geral_compras):,} sacos
                 </h2>
                 <span style="color: #64748B; font-size: 0.8rem;">{int(total_geral_colhido)} colhidas + {int(total_geral_compras)} compradas</span>
             </div>
@@ -75,7 +75,7 @@ def renderizar_tela_estoque(
             <div class="agro-card">
                 <span style="color: #94A3B8; font-size: 0.85rem; font-weight: 600; text-transform: uppercase;">🚛 Total Despachado / Vendas</span>
                 <h2 style="color: #FBBF24; margin: 0.4rem 0 0 0; font-size: 1.6rem; font-weight: 800;">
-                    {int(total_geral_vendido):,} sacas
+                    {int(total_geral_vendido):,} sacos
                 </h2>
                 <span style="color: #64748B; font-size: 0.8rem;">Saídas via caminhões de venda</span>
             </div>
@@ -88,7 +88,7 @@ def renderizar_tela_estoque(
             <div class="agro-card">
                 <span style="color: #94A3B8; font-size: 0.85rem; font-weight: 600; text-transform: uppercase;">⚠️ Perdas / Consumo Próprio</span>
                 <h2 style="color: #F87171; margin: 0.4rem 0 0 0; font-size: 1.6rem; font-weight: 800;">
-                    {int(total_geral_baixas):,} sacas
+                    {int(total_geral_baixas):,} sacos
                 </h2>
                 <span style="color: #64748B; font-size: 0.8rem;">Descartes e uso interno</span>
             </div>
@@ -129,7 +129,7 @@ def renderizar_tela_estoque(
 
                 if saldo > 0:
                     badge_class = "badge-verde"
-                    status_txt = f"🟢 {saldo} sacas disponíveis"
+                    status_txt = f"🟢 {saldo} sacos disponíveis"
                     borda = "rgba(16, 185, 129, 0.4)"
                 elif (colhidas + compras) == 0 and vendidas > 0:
                     badge_class = "badge-ouro"
@@ -152,7 +152,7 @@ def renderizar_tela_estoque(
                             </span>
                         </div>
                         <h2 style="color: #F8FAFC; margin: 0.8rem 0 0.2rem 0; font-size: 1.7rem; font-weight: 800;">
-                            {saldo} <span style="font-size: 0.95rem; font-weight: 500; color: #94A3B8;">sacas no galpão</span>
+                            {saldo} <span style="font-size: 0.95rem; font-weight: 500; color: #94A3B8;">sacos no galpão</span>
                         </h2>
                         <div style="background: rgba(0,0,0,0.25); border-radius: 8px; padding: 0.5rem 0.7rem; margin-top: 0.6rem; font-size: 0.8rem; color: #94A3B8;">
                             📥 <strong>{colhidas}</strong> colhidas &nbsp;|&nbsp; 🚚 <strong>{compras}</strong> compradas &nbsp;|&nbsp; 🚛 <strong>{vendidas}</strong> vendidas &nbsp;|&nbsp; ⚠️ <strong>{baixas}</strong> perdas
@@ -192,7 +192,7 @@ def renderizar_tela_estoque(
                 )
             with col_qtd_e:
                 qtd_entrada = st.number_input(
-                    "📦 Quantidade de Sacas:",
+                    "📦 Quantidade de Sacos:",
                     min_value=1,
                     max_value=100000,
                     value=50,
@@ -218,7 +218,7 @@ def renderizar_tela_estoque(
                         local_armazenamento="Galpão",
                         observacao=obs_entrada,
                     )
-                    st.success(f"✅ Entrada de {qtd_entrada} sacas de {safra_entrada['cultura_nome']} adicionada ao estoque com sucesso!")
+                    st.success(f"✅ Entrada de {qtd_entrada} sacos de {safra_entrada['cultura_nome']} adicionada ao estoque com sucesso!")
                     st.rerun()
                 except Exception as err:
                     st.error(f"Erro ao registrar entrada: {err}")
@@ -251,7 +251,7 @@ def renderizar_tela_estoque(
                 )
             with col_qtd_b:
                 qtd_baixa = st.number_input(
-                    "📦 Quantidade de Sacas:",
+                    "📦 Quantidade de Sacos:",
                     min_value=1,
                     max_value=10000,
                     value=5,
@@ -261,7 +261,7 @@ def renderizar_tela_estoque(
 
             obs_baixa = st.text_input(
                 "📝 Motivo / Detalhes (Opcional):",
-                placeholder="Ex: Sacas molhadas pela chuva, ração para criação da fazenda",
+                placeholder="Ex: Sacos molhados pela chuva, ração para criação da fazenda",
                 key="obs_est_baixa",
             )
 
@@ -278,7 +278,7 @@ def renderizar_tela_estoque(
                         local_armazenamento="Baixa",
                         observacao=obs_baixa,
                     )
-                    st.success(f"Baixa de {qtd_baixa} sacas de {safra_baixa['cultura_nome']} registrada!")
+                    st.success(f"Baixa de {qtd_baixa} sacos de {safra_baixa['cultura_nome']} registrada!")
                     st.rerun()
                 except Exception as err:
                     st.error(f"Erro ao registrar baixa: {err}")
@@ -304,7 +304,7 @@ def renderizar_tela_estoque(
                     "Data": m["data"].strftime("%d/%m/%Y") if hasattr(m["data"], "strftime") else str(m["data"]),
                     "Cultura": f"{m['icone']} {m['cultura_nome']}",
                     "Tipo de Movimento": m["tipo_rotulo"],
-                    "Quantidade": f"{int(m['quantidade_sacas'])} sacas",
+                    "Quantidade": f"{int(m['quantidade_sacas'])} sacos",
                     "Observações": m["observacao"] or "-",
                 }
                 for m in movs

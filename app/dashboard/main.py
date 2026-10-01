@@ -119,7 +119,7 @@ with st.sidebar:
     card_html = (
         '<div style="background: #111113; border: 1px solid rgba(255, 255, 255, 0.07); border-radius: 16px; padding: 14px 15px; margin-bottom: 1.5rem;">'
         '<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">'
-        '<span style="font-family: \'Manrope\', sans-serif; font-size: 0.8rem; color: #8E8E93; font-weight: 500;">Galpão (Sacas)</span>'
+        '<span style="font-family: \'Manrope\', sans-serif; font-size: 0.8rem; color: #8E8E93; font-weight: 500;">Galpão (Sacos)</span>'
         f'<span style="font-family: \'JetBrains Mono\', monospace; font-size: 0.78rem; color: #F4F4F5; font-weight: 600;">{total_sacas_estoque:,} / {capacidade_total:,}</span>'
         '</div>'
         '<div style="width: 100%; height: 4px; background: #222226; border-radius: 2px; margin-bottom: 13px; overflow: hidden;">'
