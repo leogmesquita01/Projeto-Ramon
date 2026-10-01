@@ -131,18 +131,14 @@ with st.sidebar:
     )
     st.markdown(card_html, unsafe_allow_html=True)
 
-    # Perfil do Usuário e Configurações no rodapé (Exato layout DevLeads)
+    # Perfil do Usuário no rodapé
     perfil_html = (
         '<div style="margin-top: auto; padding-top: 1.2rem; border-top: 1px solid rgba(255, 255, 255, 0.06);">'
         '<div style="font-family: \'Manrope\', sans-serif; font-size: 1.05rem; font-weight: 800; color: #FFFFFF; line-height: 1.2; letter-spacing: -0.3px;">'
         'Leonardo Mesquita'
         '</div>'
-        '<div style="font-family: \'JetBrains Mono\', monospace; font-size: 0.65rem; font-weight: 600; color: #71717A; letter-spacing: 2px; text-transform: uppercase; margin-top: 4px; margin-bottom: 14px;">'
+        '<div style="font-family: \'JetBrains Mono\', monospace; font-size: 0.65rem; font-weight: 600; color: #71717A; letter-spacing: 2px; text-transform: uppercase; margin-top: 4px;">'
         'CRIADOR'
-        '</div>'
-        '<div style="display: flex; align-items: center; gap: 8px; color: #8E8E93; font-family: \'Manrope\', sans-serif; font-size: 0.88rem; font-weight: 500; cursor: pointer;">'
-        '<span class="material-symbols-rounded" style="font-size: 1.15rem; color: #8E8E93;">settings</span>'
-        'Configurações'
         '</div>'
         '</div>'
     )
