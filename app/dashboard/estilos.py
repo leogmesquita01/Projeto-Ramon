@@ -11,7 +11,7 @@ def aplicar_estilos() -> None:
         """
         <style>
         /* Importação das fontes do DevLeads */
-        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700;800&family=Manrope:wght@400;500;600;700;800&family=Montserrat:wght@500;600;700;800;900&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700;800&family=Manrope:wght@400;500;600;700;800&family=Montserrat:wght@500;600;700;800;900&family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap');
         
         /* Tipografia Base Global (herança limpa, sem sobrescrever ícones) */
         html, body, .stApp {
@@ -95,22 +95,22 @@ def aplicar_estilos() -> None:
         /* ------------------------------------------------------------- */
         section[data-testid="stSidebar"] {
             background-color: transparent !important;
+            background: transparent !important;
             border: none !important;
-            padding: 14px 0 14px 14px !important;
+            padding: 14px 10px 14px 14px !important;
             box-sizing: border-box !important;
             overflow: visible !important;
             z-index: 100 !important;
         }
 
         /* O corpo da ilha flutuante com cantos arredondados */
-        section[data-testid="stSidebar"] > div:first-child,
         section[data-testid="stSidebar"] [data-testid="stSidebarContent"] {
-            background-color: #0A0A0A !important;
+            background-color: #0A0A0C !important;
             border: 1px solid rgba(255, 255, 255, 0.08) !important;
             border-radius: 24px !important;
             height: calc(100vh - 28px) !important;
             max-height: calc(100vh - 28px) !important;
-            box-shadow: 0 16px 45px rgba(0, 0, 0, 0.8), 0 0 25px rgba(184, 242, 45, 0.03) !important;
+            box-shadow: 0 16px 45px rgba(0, 0, 0, 0.85) !important;
             display: flex !important;
             flex-direction: column !important;
             position: relative !important;
@@ -124,18 +124,24 @@ def aplicar_estilos() -> None:
             margin: 0 !important;
             height: 0 !important;
             min-height: 0 !important;
+            max-height: 0 !important;
+            position: absolute !important;
+            top: 0 !important;
+            right: 0 !important;
+            width: 0 !important;
             overflow: visible !important;
-            position: relative !important;
+            z-index: 9999 !important;
         }
 
         /* Conteúdo interno da ilha */
         section[data-testid="stSidebar"] [data-testid="stSidebarUserContent"] {
-            padding: 1.2rem 1rem !important;
+            padding: 1.4rem 1.1rem !important;
             overflow-y: auto !important;
             overflow-x: hidden !important;
             height: 100% !important;
             display: flex !important;
             flex-direction: column !important;
+            border-radius: 24px !important;
         }
 
         /* Scrollbar elegante e discreta */
@@ -150,10 +156,8 @@ def aplicar_estilos() -> None:
         /* ------------------------------------------------------------- */
         /* SETINHA DE RECUO CIRCULAR (COLLAPSE BUTTON ESTILO DEVLEADS)   */
         /* ------------------------------------------------------------- */
-        [data-testid="stSidebarCollapseButton"],
-        section[data-testid="stSidebar"] button[data-testid="stSidebarCollapseButton"],
-        section[data-testid="stSidebar"] [data-testid="stSidebarHeader"] button {
-            display: inline-flex !important;
+        [data-testid="stSidebarCollapseButton"] {
+            display: flex !important;
             visibility: visible !important;
             opacity: 1 !important;
             pointer-events: auto !important;
@@ -161,48 +165,59 @@ def aplicar_estilos() -> None:
             right: -13px !important;
             top: 24px !important;
             z-index: 999999 !important;
-            background-color: #0E0E0E !important;
-            border: 1px solid rgba(255, 255, 255, 0.15) !important;
-            border-radius: 50% !important;
+            background: transparent !important;
+            border: none !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            width: 26px !important;
+            height: 26px !important;
+        }
+
+        [data-testid="stSidebarCollapseButton"] button {
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
             width: 26px !important;
             height: 26px !important;
             min-width: 26px !important;
             min-height: 26px !important;
             max-width: 26px !important;
             max-height: 26px !important;
+            border-radius: 50% !important;
+            background-color: #121214 !important;
+            border: 1px solid rgba(255, 255, 255, 0.15) !important;
             padding: 0 !important;
             margin: 0 !important;
-            align-items: center !important;
-            justify-content: center !important;
             cursor: pointer !important;
-            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.6) !important;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.8) !important;
             transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
         }
 
-        [data-testid="stSidebarCollapseButton"]:hover,
-        section[data-testid="stSidebar"] [data-testid="stSidebarHeader"] button:hover {
-            background-color: #181818 !important;
+        [data-testid="stSidebarCollapseButton"] button:hover {
+            background-color: #1E1E22 !important;
             border-color: #B8F22D !important;
-            transform: scale(1.1);
-            box-shadow: 0 0 16px rgba(184, 242, 45, 0.35) !important;
+            transform: scale(1.12);
+            box-shadow: 0 0 14px rgba(184, 242, 45, 0.4) !important;
         }
 
-        [data-testid="stSidebarCollapseButton"] svg,
-        section[data-testid="stSidebar"] [data-testid="stSidebarHeader"] button svg {
-            width: 14px !important;
-            height: 14px !important;
-            fill: #A1A1AA !important;
-            color: #A1A1AA !important;
-            transition: all 0.18s ease !important;
+        [data-testid="stSidebarCollapseButton"] button * {
+            font-size: 13px !important;
+            width: 13px !important;
+            height: 13px !important;
+            line-height: 1 !important;
+            color: #94A3B8 !important;
+            fill: #94A3B8 !important;
+            transition: color 0.18s ease !important;
         }
 
-        [data-testid="stSidebarCollapseButton"]:hover svg,
-        section[data-testid="stSidebar"] [data-testid="stSidebarHeader"] button:hover svg {
-            fill: #B8F22D !important;
+        [data-testid="stSidebarCollapseButton"] button:hover * {
             color: #B8F22D !important;
+            fill: #B8F22D !important;
         }
 
-        /* Transforma o st.radio da sidebar em botões modernos estilo DevLeads */
+        /* ------------------------------------------------------------- */
+        /* MENU DE NAVEGAÇÃO ESTILO DEVLEADS                             */
+        /* ------------------------------------------------------------- */
         section[data-testid="stSidebar"] div[data-testid="stRadio"] > div[role="radiogroup"] {
             gap: 4px !important;
             display: flex !important;
@@ -219,8 +234,8 @@ def aplicar_estilos() -> None:
             width: 100% !important;
             background: transparent !important;
             border: 1px solid transparent !important;
-            border-radius: 10px !important;
-            padding: 8px 12px !important;
+            border-radius: 12px !important;
+            padding: 9px 12px !important;
             margin: 0 !important;
             cursor: pointer !important;
             transition: all 0.18s ease-in-out !important;
@@ -228,34 +243,58 @@ def aplicar_estilos() -> None:
             align-items: center !important;
         }
 
+        section[data-testid="stSidebar"] div[data-testid="stRadio"] label div[data-testid="stMarkdownContainer"] {
+            display: flex !important;
+            align-items: center !important;
+            width: 100% !important;
+        }
+
         section[data-testid="stSidebar"] div[data-testid="stRadio"] label p {
             font-family: 'Manrope', sans-serif !important;
-            font-size: 0.9rem !important;
-            font-weight: 600 !important;
-            color: #94A3B8 !important;
+            font-size: 0.92rem !important;
+            font-weight: 500 !important;
+            color: #8E8E93 !important;
             transition: color 0.18s ease-in-out !important;
             margin: 0 !important;
+            letter-spacing: -0.2px !important;
+            display: flex !important;
+            align-items: center !important;
+            gap: 10px !important;
+        }
+
+        /* Ícone dentro do item de menu */
+        section[data-testid="stSidebar"] div[data-testid="stRadio"] label span.material-symbols-rounded,
+        section[data-testid="stSidebar"] div[data-testid="stRadio"] label [data-testid*="Icon"] {
+            font-size: 1.25rem !important;
+            color: #8E8E93 !important;
+            transition: color 0.18s ease-in-out !important;
         }
 
         /* Hover no item inativo */
         section[data-testid="stSidebar"] div[data-testid="stRadio"] label:hover {
-            background: rgba(255, 255, 255, 0.05) !important;
+            background: rgba(255, 255, 255, 0.04) !important;
         }
 
-        section[data-testid="stSidebar"] div[data-testid="stRadio"] label:hover p {
+        section[data-testid="stSidebar"] div[data-testid="stRadio"] label:hover p,
+        section[data-testid="stSidebar"] div[data-testid="stRadio"] label:hover span.material-symbols-rounded,
+        section[data-testid="stSidebar"] div[data-testid="stRadio"] label:hover [data-testid*="Icon"] {
             color: #FFFFFF !important;
         }
 
-        /* Item Ativo / Selecionado no menu (Pill com Verde Lima DevLeads) */
+        /* Item Ativo / Selecionado no menu (Pill estilo DevLeads) */
         section[data-testid="stSidebar"] div[data-testid="stRadio"] label:has(input:checked) {
-            background: rgba(184, 242, 45, 0.1) !important;
-            border: 1px solid rgba(184, 242, 45, 0.3) !important;
-            box-shadow: 0 0 16px rgba(184, 242, 45, 0.06) !important;
+            background: rgba(184, 242, 45, 0.12) !important;
+            border: 1px solid rgba(184, 242, 45, 0.22) !important;
         }
 
         section[data-testid="stSidebar"] div[data-testid="stRadio"] label:has(input:checked) p {
             color: #B8F22D !important;
-            font-weight: 700 !important;
+            font-weight: 600 !important;
+        }
+
+        section[data-testid="stSidebar"] div[data-testid="stRadio"] label:has(input:checked) span.material-symbols-rounded,
+        section[data-testid="stSidebar"] div[data-testid="stRadio"] label:has(input:checked) [data-testid*="Icon"] {
+            color: #B8F22D !important;
         }
 
         /* Botão flutuante para reabrir a ilha quando recuada */
@@ -268,7 +307,7 @@ def aplicar_estilos() -> None:
             left: 14px !important;
             top: 24px !important;
             z-index: 99999 !important;
-            background-color: #0E0E0E !important;
+            background-color: #121214 !important;
             border: 1px solid rgba(255, 255, 255, 0.15) !important;
             border-radius: 50% !important;
             width: 32px !important;
@@ -286,16 +325,19 @@ def aplicar_estilos() -> None:
 
         [data-testid="stSidebarCollapsedControl"]:hover,
         [data-testid="stExpandSidebarButton"]:hover {
-            background-color: #1A1A1A !important;
+            background-color: #1A1A1E !important;
             border-color: #B8F22D !important;
             transform: scale(1.12);
-            box-shadow: 0 0 18px rgba(184, 242, 45, 0.4) !important;
+            box-shadow: 0 0 16px rgba(184, 242, 45, 0.4) !important;
         }
 
         [data-testid="stSidebarCollapsedControl"] svg,
-        [data-testid="stExpandSidebarButton"] svg {
+        [data-testid="stExpandSidebarButton"] svg,
+        [data-testid="stSidebarCollapsedControl"] *,
+        [data-testid="stExpandSidebarButton"] * {
             width: 16px !important;
             height: 16px !important;
+            font-size: 16px !important;
             fill: #B8F22D !important;
             color: #B8F22D !important;
         }
