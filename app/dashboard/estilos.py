@@ -4,7 +4,8 @@ import streamlit as st
 def aplicar_estilos() -> None:
     """
     Aplica os estilos visuais inspirados no DevLeads (Tema Ultra Dark com Verde Lima #B8F22D,
-    tipografia Manrope + Montserrat + JetBrains Mono e barra lateral estilo SaaS).
+    tipografia Manrope + Montserrat + JetBrains Mono e barra lateral estilo SaaS),
+    preservando rigorosamente a renderização dos ícones do Streamlit (Material Symbols).
     """
     st.markdown(
         """
@@ -12,10 +13,15 @@ def aplicar_estilos() -> None:
         /* Importação das fontes do DevLeads */
         @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700;800&family=Manrope:wght@400;500;600;700;800&family=Montserrat:wght@500;600;700;800;900&display=swap');
         
-        /* Tipografia Base Global */
-        html, body, [class*="css"], .stMarkdown, p, span, div {
+        /* Tipografia Base Global (herança limpa, sem sobrescrever ícones) */
+        html, body, .stApp {
             font-family: 'Manrope', -apple-system, BlinkMacSystemFont, sans-serif !important;
             color: #EDEDED;
+            background-color: #050505 !important;
+        }
+
+        p, label, input, textarea, select, button, .stMarkdown p {
+            font-family: 'Manrope', -apple-system, BlinkMacSystemFont, sans-serif;
         }
 
         /* Títulos com Montserrat marcante */
@@ -32,9 +38,26 @@ def aplicar_estilos() -> None:
             font-weight: 700 !important;
         }
 
-        /* Fundo da Aplicação */
-        .stApp {
-            background-color: #050505 !important;
+        /* ------------------------------------------------------------- */
+        /* PRESERVAÇÃO TOTAL DOS ÍCONES MATERIAL SYMBOLS DO STREAMLIT    */
+        /* (Garante que setas, chevrons e ícones nunca virem texto puro) */
+        /* ------------------------------------------------------------- */
+        [data-testid*="Icon"],
+        [data-testid*="icon"],
+        [data-testid="stIconMaterial"],
+        .material-symbols-rounded,
+        .material-symbols-outlined,
+        .material-symbols-sharp,
+        [class*="material-symbols"],
+        [class*="material-icons"] {
+            font-family: "Material Symbols Rounded", "Material Symbols Outlined", "Material Icons" !important;
+            font-feature-settings: "liga" 1, "dlig" 1 !important;
+            text-transform: none !important;
+            direction: ltr !important;
+            -webkit-font-smoothing: antialiased !important;
+            font-style: normal !important;
+            display: inline-block !important;
+            line-height: 1 !important;
         }
 
         /* Espaçamento superior da área principal */
@@ -54,7 +77,7 @@ def aplicar_estilos() -> None:
             background: transparent !important;
         }
 
-        /* Ocultar elementos padrão do Streamlit */
+        /* Ocultar elementos desnecessários padrão do Streamlit */
         #MainMenu, 
         [data-testid="stMainMenu"], 
         footer, 
@@ -108,13 +131,13 @@ def aplicar_estilos() -> None:
             align-items: center !important;
         }
 
-        section[data-testid="stSidebar"] div[data-testid="stRadio"] label p,
-        section[data-testid="stSidebar"] div[data-testid="stRadio"] label span {
+        section[data-testid="stSidebar"] div[data-testid="stRadio"] label p {
             font-family: 'Manrope', sans-serif !important;
             font-size: 0.9rem !important;
             font-weight: 600 !important;
             color: #94A3B8 !important;
             transition: color 0.18s ease-in-out !important;
+            margin: 0 !important;
         }
 
         /* Hover no item inativo */
@@ -122,8 +145,7 @@ def aplicar_estilos() -> None:
             background: rgba(255, 255, 255, 0.05) !important;
         }
 
-        section[data-testid="stSidebar"] div[data-testid="stRadio"] label:hover p,
-        section[data-testid="stSidebar"] div[data-testid="stRadio"] label:hover span {
+        section[data-testid="stSidebar"] div[data-testid="stRadio"] label:hover p {
             color: #FFFFFF !important;
         }
 
@@ -134,8 +156,7 @@ def aplicar_estilos() -> None:
             box-shadow: 0 0 16px rgba(184, 242, 45, 0.06) !important;
         }
 
-        section[data-testid="stSidebar"] div[data-testid="stRadio"] label:has(input:checked) p,
-        section[data-testid="stSidebar"] div[data-testid="stRadio"] label:has(input:checked) span {
+        section[data-testid="stSidebar"] div[data-testid="stRadio"] label:has(input:checked) p {
             color: #B8F22D !important;
             font-weight: 700 !important;
         }
@@ -188,17 +209,13 @@ def aplicar_estilos() -> None:
         }
 
         [data-testid="stExpandSidebarButton"] svg,
-        [data-testid="stExpandSidebarButton"] span,
-        [data-testid="stSidebarCollapsedControl"] svg,
-        [data-testid="stSidebarCollapsedControl"] span {
+        [data-testid="stSidebarCollapsedControl"] svg {
             color: #B8F22D !important;
             fill: #B8F22D !important;
         }
 
         [data-testid="stExpandSidebarButton"]:hover svg,
-        [data-testid="stExpandSidebarButton"]:hover span,
-        [data-testid="stSidebarCollapsedControl"]:hover svg,
-        [data-testid="stSidebarCollapsedControl"]:hover span {
+        [data-testid="stSidebarCollapsedControl"]:hover svg {
             color: #050505 !important;
             fill: #050505 !important;
         }
