@@ -91,18 +91,115 @@ def aplicar_estilos() -> None:
         }
 
         /* ------------------------------------------------------------- */
-        /* BARRA LATERAL ESTILO DEVLEADS */
+        /* BARRA LATERAL EM ILHA FLUTUANTE (DEVLEADS FLOATING ISLAND)   */
         /* ------------------------------------------------------------- */
         section[data-testid="stSidebar"] {
-            background-color: #080808 !important;
-            border-right: 1px solid rgba(255, 255, 255, 0.08) !important;
-            padding-top: 1rem !important;
+            background-color: transparent !important;
+            border: none !important;
+            padding: 14px 0 14px 14px !important;
+            box-sizing: border-box !important;
+            overflow: visible !important;
+            z-index: 100 !important;
         }
 
+        /* O corpo da ilha flutuante com cantos arredondados */
+        section[data-testid="stSidebar"] > div:first-child,
+        section[data-testid="stSidebar"] [data-testid="stSidebarContent"] {
+            background-color: #0A0A0A !important;
+            border: 1px solid rgba(255, 255, 255, 0.08) !important;
+            border-radius: 24px !important;
+            height: calc(100vh - 28px) !important;
+            max-height: calc(100vh - 28px) !important;
+            box-shadow: 0 16px 45px rgba(0, 0, 0, 0.8), 0 0 25px rgba(184, 242, 45, 0.03) !important;
+            display: flex !important;
+            flex-direction: column !important;
+            position: relative !important;
+            overflow: visible !important;
+        }
+
+        /* Header da sidebar (contém o botão de recuo) */
+        section[data-testid="stSidebar"] [data-testid="stSidebarHeader"] {
+            background: transparent !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            height: 0 !important;
+            min-height: 0 !important;
+            overflow: visible !important;
+            position: relative !important;
+        }
+
+        /* Conteúdo interno da ilha */
         section[data-testid="stSidebar"] [data-testid="stSidebarUserContent"] {
-            padding-top: 0.5rem !important;
-            padding-left: 1rem !important;
-            padding-right: 1rem !important;
+            padding: 1.2rem 1rem !important;
+            overflow-y: auto !important;
+            overflow-x: hidden !important;
+            height: 100% !important;
+            display: flex !important;
+            flex-direction: column !important;
+        }
+
+        /* Scrollbar elegante e discreta */
+        section[data-testid="stSidebar"] [data-testid="stSidebarUserContent"]::-webkit-scrollbar {
+            width: 4px;
+        }
+        section[data-testid="stSidebar"] [data-testid="stSidebarUserContent"]::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+        }
+
+        /* ------------------------------------------------------------- */
+        /* SETINHA DE RECUO CIRCULAR (COLLAPSE BUTTON ESTILO DEVLEADS)   */
+        /* ------------------------------------------------------------- */
+        [data-testid="stSidebarCollapseButton"],
+        section[data-testid="stSidebar"] button[data-testid="stSidebarCollapseButton"],
+        section[data-testid="stSidebar"] [data-testid="stSidebarHeader"] button {
+            display: inline-flex !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+            pointer-events: auto !important;
+            position: absolute !important;
+            right: -13px !important;
+            top: 24px !important;
+            z-index: 999999 !important;
+            background-color: #0E0E0E !important;
+            border: 1px solid rgba(255, 255, 255, 0.15) !important;
+            border-radius: 50% !important;
+            width: 26px !important;
+            height: 26px !important;
+            min-width: 26px !important;
+            min-height: 26px !important;
+            max-width: 26px !important;
+            max-height: 26px !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            align-items: center !important;
+            justify-content: center !important;
+            cursor: pointer !important;
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.6) !important;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        }
+
+        [data-testid="stSidebarCollapseButton"]:hover,
+        section[data-testid="stSidebar"] [data-testid="stSidebarHeader"] button:hover {
+            background-color: #181818 !important;
+            border-color: #B8F22D !important;
+            transform: scale(1.1);
+            box-shadow: 0 0 16px rgba(184, 242, 45, 0.35) !important;
+        }
+
+        [data-testid="stSidebarCollapseButton"] svg,
+        section[data-testid="stSidebar"] [data-testid="stSidebarHeader"] button svg {
+            width: 14px !important;
+            height: 14px !important;
+            fill: #A1A1AA !important;
+            color: #A1A1AA !important;
+            transition: all 0.18s ease !important;
+        }
+
+        [data-testid="stSidebarCollapseButton"]:hover svg,
+        section[data-testid="stSidebar"] [data-testid="stSidebarHeader"] button:hover svg {
+            fill: #B8F22D !important;
+            color: #B8F22D !important;
         }
 
         /* Transforma o st.radio da sidebar em botões modernos estilo DevLeads */
@@ -161,69 +258,52 @@ def aplicar_estilos() -> None:
             font-weight: 700 !important;
         }
 
-        /* Botão de reabrir sidebar recolhida */
-        [data-testid="stExpandSidebarButton"],
+        /* Botão flutuante para reabrir a ilha quando recuada */
         [data-testid="stSidebarCollapsedControl"],
-        header[data-testid="stHeader"] button {
+        [data-testid="stExpandSidebarButton"] {
             display: inline-flex !important;
             visibility: visible !important;
             pointer-events: auto !important;
-        }
-
-        [data-testid="stExpandSidebarButton"],
-        [data-testid="stSidebarCollapsedControl"] {
+            position: fixed !important;
+            left: 14px !important;
+            top: 24px !important;
+            z-index: 99999 !important;
             background-color: #0E0E0E !important;
-            border: 1.5px solid #B8F22D !important;
-            border-radius: 12px !important;
-            color: #B8F22D !important;
-            padding: 6px 14px !important;
-            margin-top: 10px !important;
-            margin-left: 14px !important;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6), 0 0 12px rgba(184, 242, 45, 0.25) !important;
-            transition: all 0.25s ease !important;
-            cursor: pointer !important;
+            border: 1px solid rgba(255, 255, 255, 0.15) !important;
+            border-radius: 50% !important;
+            width: 32px !important;
+            height: 32px !important;
+            min-width: 32px !important;
+            min-height: 32px !important;
+            padding: 0 !important;
+            margin: 0 !important;
             align-items: center !important;
+            justify-content: center !important;
+            cursor: pointer !important;
+            box-shadow: 0 4px 18px rgba(0, 0, 0, 0.8) !important;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
         }
 
-        [data-testid="stExpandSidebarButton"]::after,
-        [data-testid="stSidebarCollapsedControl"]::after {
-            content: " Menu";
-            font-size: 0.88rem !important;
-            font-weight: 700 !important;
-            color: #B8F22D !important;
-            margin-left: 6px !important;
-            font-family: 'Manrope', sans-serif !important;
+        [data-testid="stSidebarCollapsedControl"]:hover,
+        [data-testid="stExpandSidebarButton"]:hover {
+            background-color: #1A1A1A !important;
+            border-color: #B8F22D !important;
+            transform: scale(1.12);
+            box-shadow: 0 0 18px rgba(184, 242, 45, 0.4) !important;
         }
 
-        [data-testid="stExpandSidebarButton"]:hover,
-        [data-testid="stSidebarCollapsedControl"]:hover {
-            background-color: #B8F22D !important;
-            color: #050505 !important;
-            transform: scale(1.03);
-            box-shadow: 0 6px 25px rgba(184, 242, 45, 0.4) !important;
-        }
-
-        [data-testid="stExpandSidebarButton"]:hover::after,
-        [data-testid="stSidebarCollapsedControl"]:hover::after {
-            color: #050505 !important;
-        }
-
-        [data-testid="stExpandSidebarButton"] svg,
-        [data-testid="stSidebarCollapsedControl"] svg {
-            color: #B8F22D !important;
+        [data-testid="stSidebarCollapsedControl"] svg,
+        [data-testid="stExpandSidebarButton"] svg {
+            width: 16px !important;
+            height: 16px !important;
             fill: #B8F22D !important;
+            color: #B8F22D !important;
         }
 
-        [data-testid="stExpandSidebarButton"]:hover svg,
-        [data-testid="stSidebarCollapsedControl"]:hover svg {
-            color: #050505 !important;
-            fill: #050505 !important;
-        }
-
-        [data-testid="stSidebarCollapseButton"] {
+        [data-testid="stSidebarCollapsedControl"]::after,
+        [data-testid="stExpandSidebarButton"]::after {
             display: none !important;
-            visibility: hidden !important;
-            pointer-events: none !important;
+            content: "" !important;
         }
 
         /* ------------------------------------------------------------- */
