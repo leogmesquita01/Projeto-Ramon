@@ -138,7 +138,7 @@ with st.sidebar:
         'Leonardo Mesquita'
         '</div>'
         '<div style="font-family: \'JetBrains Mono\', monospace; font-size: 0.65rem; font-weight: 600; color: #71717A; letter-spacing: 2px; text-transform: uppercase; margin-top: 4px; margin-bottom: 14px;">'
-        'PLANO PRODUTOR RURAL'
+        'CRIADOR'
         '</div>'
         '<div style="display: flex; align-items: center; gap: 8px; color: #8E8E93; font-family: \'Manrope\', sans-serif; font-size: 0.88rem; font-weight: 500; cursor: pointer;">'
         '<span class="material-symbols-rounded" style="font-size: 1.15rem; color: #8E8E93;">settings</span>'
