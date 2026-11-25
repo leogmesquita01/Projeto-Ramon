@@ -44,3 +44,13 @@ Aplicativo web moderno para gestão financeira, controle de colheita e fluxo de 
 * **Interface:** Streamlit
 * **Banco de Dados:** PostgreSQL (hospedado no Supabase)
 * **Design:** Tema escuro floresta com toques esmeralda e ouro, otimizado para celulares.
+
+---
+
+## 🔐 Configuração do banco
+
+As credenciais do banco **não ficam no repositório**.
+
+* **Uso local:** copie `.streamlit/secrets.toml.example` para `.streamlit/secrets.toml` e preencha com os dados reais do seu banco.
+* **Streamlit Community Cloud:** cole o mesmo conteúdo em *App settings → Secrets*.
+* **Nunca** faça commit do arquivo `.streamlit/secrets.toml` real (ele já está no `.gitignore`).
